@@ -10,9 +10,6 @@
 ```yaml
 env: dev
 log: /tmp/log
-
-debug:
-  addr: localhost:8888
 ```
 
 ***main.go***
