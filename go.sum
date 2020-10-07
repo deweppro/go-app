@@ -1,8 +1,8 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/deweppro/go-algorithms v1.0.3 h1:6+Eligfy3dTfXg0cLVF0A8Ng7xMhmTH76VZ9MJcGf9c=
-github.com/deweppro/go-algorithms v1.0.3/go.mod h1:h50x8PTIGbiIhOh5vH/10J39vTzi2UmG7TVLupellqY=
+github.com/deweppro/go-algorithms v1.1.0 h1:85/Rq9WWat+/FfTvLlkCvO7CFMrIpBun2Y08cDl/yB4=
+github.com/deweppro/go-algorithms v1.1.0/go.mod h1:h50x8PTIGbiIhOh5vH/10J39vTzi2UmG7TVLupellqY=
 github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
 github.com/josharian/intern v1.0.0/go.mod h1:5DoeVV0s6jJacbCEi61lwdGj/aVlrQvzHFFd8Hwg//Y=
 github.com/konsorten/go-windows-terminal-sequences v1.0.3 h1:CE8S1cTafDpPvMhIxNJKvHsGVBgn1xWYf1NbHQhywc8=
