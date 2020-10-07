@@ -17,22 +17,10 @@
 
 package app
 
-type Interfaces struct {
-	data []interface{}
-}
+//go:generate easyjson
 
-func NewInterfaces() *Interfaces {
-	return &Interfaces{
-		data: []interface{}{},
-	}
-}
-
-func (m *Interfaces) Add(a ...interface{}) *Interfaces {
-	m.data = append(m.data, a...)
-
-	return m
-}
-
-func (m *Interfaces) Get() []interface{} {
-	return m.data
+//easyjson:json
+type ConfigLogger struct {
+	Env     string `yaml:"env" json:"env"`
+	LogFile string `yaml:"log" json:"log"`
 }

@@ -2,6 +2,7 @@
 
 [![Release](https://img.shields.io/github/release/deweppro/go-app.svg?style=flat-square)](https://github.com/deweppro/go-app/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/deweppro/go-app)](https://goreportcard.com/report/github.com/deweppro/go-app)
+[![Build Status](https://travis-ci.com/deweppro/go-app.svg?branch=master)](https://travis-ci.com/deweppro/go-app)
 
 ## simple
 
@@ -23,33 +24,35 @@ package main
 import (
 	"fmt"
 
-	"github.com/deweppro/go-app/pkg/app"
-	"github.com/deweppro/go-app/pkg/logger"
+	"github.com/deweppro/go-app"
 )
+
+var _ app.ServiceInterface = (*Simple)(nil)
 
 type Simple struct{}
 
-func NewSimple(_ *logger.ConfigLog) *Simple {
+func NewSimple(_ *app.ConfigLogger) *Simple {
 	fmt.Println("call NewSimple")
 	return &Simple{}
 }
+
 func (s *Simple) Up() error {
 	fmt.Println("call *Simple.Up")
 	return nil
 }
+
 func (s *Simple) Down() error {
 	fmt.Println("call *Simple.Down")
 	return nil
 }
 
 func main() {
-	app.New("config.yaml").
-		ConfigModels(
-			&logger.ConfigLog{},
-		).
-		Modules(
-			NewSimple,
-		).PidFile("/tmp/app.pid").Run()
+	app.
+		New("config.yaml").
+		ConfigModels(&app.ConfigLogger{}).
+		Modules(NewSimple).
+		PidFile("/tmp/app.pid").
+		Run()
 }
 
 ```
@@ -90,6 +93,7 @@ func (s2 *Simple2) Get() string {
 *If the object has the `Up() error` and `Down() error` methods, they will be called `Up() error`  when the app starts, and `Down() error` when it finishes. This allows you to automatically start and stop routine processes inside the module*
 
 ```go
+var _ app.ServiceInterface = (*Simple3)(nil)
 type Simple3 struct{}
 func NewSimple3(_ *Simple4) *Simple3 { return &Simple3{} }
 func (s3 *Simple3) Up() error { return nil }

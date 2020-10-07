@@ -15,18 +15,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
  */
 
-package initializer
+package app
 
 import (
 	"github.com/pkg/errors"
 )
 
 var (
-	errorDepRunning    = errors.New("dependencies is already running")
-	errorDepNotRunning = errors.New("dependencies are not running yet")
-	errorDepEmpty      = errors.New("dependencies is empty")
-	errorDepUnknown    = errors.New("unknown dependency")
-	errorBadAction     = errors.New("is not a supported action")
+	ErrDepRunning    = errors.New("dependencies is already running")
+	ErrDepNotRunning = errors.New("dependencies are not running yet")
+	ErrDepEmpty      = errors.New("dependencies is empty")
+	ErrDepUnknown    = errors.New("unknown dependency")
+	ErrBadAction     = errors.New("is not a supported action")
 )
 
 var types = []string{

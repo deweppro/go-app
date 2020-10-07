@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
  */
 
-package initializer
+package app
 
 import (
 	"testing"
@@ -80,7 +80,7 @@ type ii interface {
 func newT7i() ii { return &t7{} }
 
 func TestUnit_Dependencies(t *testing.T) {
-	dep := New()
+	dep := NewDI()
 
 	var a hello
 	a = "hhhh"
@@ -92,7 +92,6 @@ func TestUnit_Dependencies(t *testing.T) {
 	}))
 
 	require.NoError(t, dep.Build())
-
 	require.NoError(t, dep.Up())
 	require.Error(t, dep.Up())
 

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
  */
 
-package initializer
+package app
 
 import (
 	"reflect"
@@ -29,24 +29,19 @@ type services struct {
 	up       bool
 }
 
-type idep interface {
-	get(string) (interface{}, bool)
-	set(string, interface{})
-}
-
 type sequence struct {
 	Previous *sequence
-	Current  iserv
+	Current  ServiceInterface
 	Next     *sequence
 }
 
-type iserv interface {
+type ServiceInterface interface {
 	Up() error
 	Down() error
 }
 
 var (
-	srvType = reflect.TypeOf(new(iserv)).Elem()
+	srvType = reflect.TypeOf(new(ServiceInterface)).Elem()
 )
 
 func newServices() *services {
@@ -62,9 +57,9 @@ func (s *services) IsUp() bool {
 }
 
 // Add - add new service by interface
-func (s *services) Add(v iserv) error {
+func (s *services) Add(v ServiceInterface) error {
 	if s.IsUp() {
-		return errorDepRunning
+		return ErrDepRunning
 	}
 
 	if s.sequence == nil {
@@ -89,28 +84,22 @@ func (s *services) Add(v iserv) error {
 // Up - start all services
 func (s *services) Up() error {
 	if s.IsUp() {
-		return errorDepRunning
+		return ErrDepRunning
 	}
-
 	if s.sequence == nil {
-		return errorDepEmpty
+		return ErrDepEmpty
 	}
-
 	s.up = true
-
 	for s.sequence.Previous != nil {
 		s.sequence = s.sequence.Previous
 	}
-
 	for {
 		if er := s.sequence.Current.Up(); er != nil {
 			return er
 		}
-
 		if s.sequence.Next == nil {
 			break
 		}
-
 		s.sequence = s.sequence.Next
 	}
 
@@ -120,41 +109,34 @@ func (s *services) Up() error {
 // Down - stop all services
 func (s *services) Down() error {
 	if !s.IsUp() {
-		return errorDepNotRunning
+		return ErrDepNotRunning
 	}
-
 	if s.sequence == nil {
-		return errorDepEmpty
+		return ErrDepEmpty
 	}
-
 	defer func() {
 		if err := recover(); err != nil {
 			logrus.WithField("trace", err).Error("panic on services down")
 		}
 	}()
-
-	var e error
-
+	var (
+		e error
+	)
 	for {
 		if err := s.sequence.Current.Down(); err != nil {
 			e = errors.Wrapf(err,
-				"Error when down %s service",
+				"down %s service error",
 				reflect.TypeOf(s.sequence.Current).String(),
 			)
 		}
-
 		if s.sequence.Previous == nil {
 			break
 		}
-
 		s.sequence = s.sequence.Previous
 	}
-
 	for s.sequence.Next != nil {
 		s.sequence = s.sequence.Next
 	}
-
 	s.up = false
-
 	return e
 }

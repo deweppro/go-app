@@ -15,26 +15,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
  */
 
-package event
+package app
 
-import (
-	"os"
-	"os/signal"
-	"syscall"
-)
-
-func OnSyscallStop(callFunc func()) {
-	quit := make(chan os.Signal, 4)
-	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
-	<-quit
-
-	callFunc()
+type modules struct {
+	data []interface{}
 }
 
-func OnSyscallUp(callFunc func()) {
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGHUP)
-	<-quit
+func newModules() *modules {
+	return &modules{
+		data: []interface{}{},
+	}
+}
 
-	callFunc()
+func (m *modules) Add(a ...interface{}) *modules {
+	m.data = append(m.data, a...)
+	return m
+}
+
+func (m *modules) Get() []interface{} {
+	return m.data
 }

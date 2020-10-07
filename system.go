@@ -15,22 +15,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
  */
 
-package errors
+package app
 
 import (
-	"fmt"
-
-	"github.com/pkg/errors"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
-func WrapErrors(err1 error, prefix string, err2 error) error {
-	if err2 == nil {
-		return err1
-	}
+func OnSyscallStop(callFunc func()) {
+	quit := make(chan os.Signal, 4)
+	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	<-quit
 
-	if err1 == nil {
-		return fmt.Errorf("[%s]: %s", prefix, err2.Error())
-	}
+	callFunc()
+}
 
-	return errors.WithMessagef(err1, "[%s]: %s", prefix, err2.Error())
+func OnSyscallUp(callFunc func()) {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGHUP)
+	<-quit
+
+	callFunc()
 }

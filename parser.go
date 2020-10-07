@@ -15,45 +15,55 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
  */
 
-package logger
+package app
 
 import (
-	"os"
+	"encoding/json"
+	"io/ioutil"
 
-	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
-type Logger struct {
-	file  *os.File
-	debug bool
+type sources struct {
+	filename string
+	data     []byte
 }
 
-func MustNew(cfg *ConfigLog) *Logger {
-	file, err := os.OpenFile(cfg.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+func newSources(filename string) (*sources, error) {
+	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		logrus.Fatal(err)
+		return nil, err
 	}
-
-	l := &Logger{
-		file:  file,
-		debug: cfg.Env == "dev",
-	}
-
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(l)
-	logrus.SetLevel(logrus.DebugLevel)
-
-	return l
+	return &sources{
+		filename: filename,
+		data:     data,
+	}, nil
 }
 
-func (l *Logger) Write(p []byte) (n int, err error) {
-	if l.debug {
-		n, err = os.Stdout.Write(p)
-	}
-
-	return l.file.Write(p)
+func (s *sources) Filename() string {
+	return s.filename
 }
 
-func (l *Logger) Down() error {
-	return l.file.Close()
+func (s *sources) Data() []byte {
+	return s.data
+}
+
+func (s *sources) YAML(configs ...interface{}) error {
+	for _, conf := range configs {
+		err := yaml.Unmarshal(s.data, conf)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *sources) JSON(configs ...interface{}) error {
+	for _, conf := range configs {
+		err := json.Unmarshal(s.data, conf)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

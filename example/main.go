@@ -15,31 +15,38 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
  */
 
-package errors
+package main
 
 import (
-	"errors"
-	"testing"
+	"fmt"
 
-	"github.com/stretchr/testify/require"
+	"github.com/deweppro/go-app"
 )
 
-func TestWrapErrors(t *testing.T) {
-	require.Equal(
-		t,
-		WrapErrors(nil, "test", errors.New("Hello")).Error(),
-		"[test]: Hello",
-	)
+var _ app.ServiceInterface = (*Simple)(nil)
 
-	require.Equal(
-		t,
-		WrapErrors(nil, "test", nil),
-		nil,
-	)
+type Simple struct{}
 
-	require.Equal(
-		t,
-		WrapErrors(errors.New("Hello"), "test", errors.New("World")).Error(),
-		"[test]: World: Hello",
-	)
+func NewSimple(_ *app.ConfigLogger) *Simple {
+	fmt.Println("call NewSimple")
+	return &Simple{}
+}
+
+func (s *Simple) Up() error {
+	fmt.Println("call *Simple.Up")
+	return nil
+}
+
+func (s *Simple) Down() error {
+	fmt.Println("call *Simple.Down")
+	return nil
+}
+
+func main() {
+	app.
+		New("config.yaml").
+		ConfigModels(&app.ConfigLogger{}).
+		Modules(NewSimple).
+		PidFile("/tmp/app.pid").
+		Run()
 }
