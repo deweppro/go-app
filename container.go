@@ -15,27 +15,34 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
  */
 
-package initializer
+package app
 
 import (
-	errors2 "errors"
 	"fmt"
 	"reflect"
 
-	"github.com/deweppro/algorithms/graph/kahn"
+	"github.com/deweppro/go-algorithms/graph/kahn"
 	"github.com/pkg/errors"
 )
 
-// Dependencies - managing dependencies
-type Dependencies struct {
-	kahn *kahn.Kahn
-	srv  *services
-	all  map[string]interface{}
-}
+type (
+	// DI - managing dependencies
+	DI struct {
+		kahn *kahn.Graph
+		srv  *services
+		all  map[string]interface{}
+	}
+	typer interface {
+		Elem() reflect.Type
+		String() string
+		PkgPath() string
+		Name() string
+	}
+)
 
-// New - create new dependency manager
-func New() *Dependencies {
-	dep := &Dependencies{
+// NewDI - create new dependency manager
+func NewDI() *DI {
+	dep := &DI{
 		kahn: kahn.New(),
 		srv:  newServices(),
 		all:  make(map[string]interface{}),
@@ -44,10 +51,20 @@ func New() *Dependencies {
 	return dep
 }
 
+func (_di *DI) addr(t typer) string {
+	if isDefaultType(t.Name()) {
+		return t.String()
+	}
+	if len(t.PkgPath()) > 0 {
+		return t.PkgPath() + ":" + t.String()
+	}
+	return t.Elem().PkgPath() + ":" + t.String()
+}
+
 // Register - register a new dependency
-func (dep *Dependencies) Register(items []interface{}) error {
-	if dep.srv.IsUp() {
-		return errorDepRunning
+func (_di *DI) Register(items []interface{}) error {
+	if _di.srv.IsUp() {
+		return ErrDepRunning
 	}
 
 	for _, item := range items {
@@ -57,25 +74,22 @@ func (dep *Dependencies) Register(items []interface{}) error {
 
 		case reflect.Func:
 			for i := 0; i < ref.NumOut(); i++ {
-				t := ref.Out(i)
-				n := t.String()
-
+				n := _di.addr(ref.Out(i))
 				if n == "error" {
 					continue
 				}
-
-				dep.all[n] = item
+				_di.all[n] = item
 			}
 
 		case reflect.Struct:
-			dep.all[reflect.New(reflect.TypeOf(item)).Type().String()] = item
+			_di.all[_di.addr(reflect.New(reflect.TypeOf(item)).Type())] = item
 
 		case reflect.Ptr:
-			dep.all[ref.String()] = item
+			_di.all[_di.addr(ref)] = item
 
 		default:
 			if !isDefaultType(ref.Name()) {
-				dep.all[ref.String()] = item
+				_di.all[_di.addr(ref)] = item
 			}
 		}
 	}
@@ -84,49 +98,40 @@ func (dep *Dependencies) Register(items []interface{}) error {
 }
 
 // Build - initialize dependencies
-func (dep *Dependencies) Build() error {
-	for out, item := range dep.all {
-
+func (_di *DI) Build() error {
+	for out, item := range _di.all {
 		ref := reflect.TypeOf(item)
 
 		switch ref.Kind() {
 
 		case reflect.Func:
 			if ref.NumIn() == 0 {
-				if err := dep.kahn.Add("error", out); err != nil {
+				if err := _di.kahn.Add("error", out); err != nil {
 					return errors.Wrapf(err, "cant add [error->%s] to graph", out)
 				}
 			}
-
 			for i := 0; i < ref.NumIn(); i++ {
-				it := ref.In(i)
-				in := it.String()
-
-				if _, ok := dep.all[in]; !ok {
+				in := _di.addr(ref.In(i))
+				if _, ok := _di.all[in]; !ok {
 					return fmt.Errorf("type is not found %s for %s", in, out)
 				}
-
-				if err := dep.kahn.Add(in, out); err != nil {
+				if err := _di.kahn.Add(in, out); err != nil {
 					return errors.Wrapf(err, "cant add [%s->%s] to graph", in, out)
 				}
 			}
 
 		case reflect.Struct:
 			if ref.NumField() == 0 {
-				if err := dep.kahn.Add("error", out); err != nil {
+				if err := _di.kahn.Add("error", out); err != nil {
 					return errors.Wrapf(err, "cant add [error->%s] to graph", out)
 				}
 			}
-
 			for i := 0; i < ref.NumField(); i++ {
-				it := ref.Field(i)
-				in := it.Type.String()
-
-				if _, ok := dep.all[in]; !ok {
+				in := _di.addr(ref.Field(i).Type)
+				if _, ok := _di.all[in]; !ok {
 					return fmt.Errorf("type is not found %s for %s", in, out)
 				}
-
-				if err := dep.kahn.Add(in, out); err != nil {
+				if err := _di.kahn.Add(in, out); err != nil {
 					return errors.Wrapf(err, "cant add [%s->%s] to graph", in, out)
 				}
 			}
@@ -134,27 +139,29 @@ func (dep *Dependencies) Build() error {
 
 	}
 
-	if err := dep.kahn.Build(); err != nil {
+	if err := _di.kahn.Build(); err != nil {
 		return errors.Wrap(err, "cant build graph")
 	}
 
-	for _, name := range dep.kahn.Result() {
-		if item, ok := dep.all[name]; ok {
+	for _, name := range _di.kahn.Result() {
+		if item, ok := _di.all[name]; ok {
 
-			if values, err := dep.di(item); err == nil {
+			if values, err := _di.di(item); err == nil {
 				for _, value := range values {
 					if value.Type().AssignableTo(srvType) {
-						dep.srv.Add(value.Interface().(iserv))
+						if err = _di.srv.Add(value.Interface().(ServiceInterface)); err != nil {
+							return errors.Wrap(err, "cant add element in graph")
+						}
 					}
 
-					dep.all[name] = value.Interface()
+					_di.all[name] = value.Interface()
 				}
-			} else if !errors2.Is(err, errorBadAction) {
+			} else if !errors.Is(err, ErrBadAction) {
 				return errors.Wrapf(err, "cant initialize %s", name)
 			}
 
 		} else {
-			return errorDepUnknown
+			return ErrDepUnknown
 		}
 	}
 
@@ -162,22 +169,22 @@ func (dep *Dependencies) Build() error {
 }
 
 // Down - stop all services in dependencies
-func (dep *Dependencies) Down() error {
-	return dep.srv.Down()
+func (_di *DI) Down() error {
+	return _di.srv.Down()
 }
 
 // Up - start all services in dependencies
-func (dep *Dependencies) Up() error {
-	return dep.srv.Up()
+func (_di *DI) Up() error {
+	return _di.srv.Up()
 }
 
 // Inject - obtained dependence
-func (dep *Dependencies) Inject(item interface{}) error {
-	_, err := dep.di(item)
+func (_di *DI) Inject(item interface{}) error {
+	_, err := _di.di(item)
 	return err
 }
 
-func (dep *Dependencies) di(item interface{}) ([]reflect.Value, error) {
+func (_di *DI) di(item interface{}) ([]reflect.Value, error) {
 	ref := reflect.TypeOf(item)
 	args := make([]reflect.Value, 0)
 
@@ -185,28 +192,28 @@ func (dep *Dependencies) di(item interface{}) ([]reflect.Value, error) {
 
 	case reflect.Func:
 		for i := 0; i < ref.NumIn(); i++ {
-			in := ref.In(i).String()
-			if el, ok := dep.all[in]; ok {
+			in := _di.addr(ref.In(i))
+			if el, ok := _di.all[in]; ok {
 				args = append(args, reflect.ValueOf(el))
 			} else {
-				return nil, errors.Wrap(errorDepUnknown, in)
+				return nil, errors.Wrap(ErrDepUnknown, in)
 			}
 		}
 
 	case reflect.Struct:
 		value := reflect.New(ref)
 		for i := 0; i < ref.NumField(); i++ {
-			in := ref.Field(i).Type.String()
-			if el, has := dep.all[in]; has {
+			in := _di.addr(ref.Field(i).Type)
+			if el, has := _di.all[in]; has {
 				value.Elem().FieldByName(ref.Field(i).Name).Set(reflect.ValueOf(el))
 			} else {
-				return nil, errors.Wrap(errorDepUnknown, in)
+				return nil, errors.Wrap(ErrDepUnknown, in)
 			}
 		}
 		return append(args, value), nil
 
 	default:
-		return nil, errorBadAction
+		return nil, ErrBadAction
 	}
 
 	return reflect.ValueOf(item).Call(args), nil

@@ -17,18 +17,16 @@
 
 package app
 
-import "context"
+import (
+	"github.com/pkg/errors"
+)
 
-type ForceClose struct {
-	C     context.Context
-	Close context.CancelFunc
-}
-
-func NewForceClose() *ForceClose {
-	ctx, cncl := context.WithCancel(context.Background())
-
-	return &ForceClose{
-		C:     ctx,
-		Close: cncl,
+func WrapErrors(err1, err2 error, message string) error {
+	if err2 == nil {
+		return err1
 	}
+	if err1 == nil {
+		return errors.Wrap(err2, message)
+	}
+	return errors.Wrap(err1, errors.Wrap(err2, message).Error())
 }

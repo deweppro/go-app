@@ -15,9 +15,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
  */
 
-package logger
+package app
 
-type ConfigLog struct {
-	Env     string `yaml:"env"`
-	LogFile string `yaml:"log"`
+import "context"
+
+type ForceClose struct {
+	C     context.Context
+	Close context.CancelFunc
+}
+
+func newForceClose() *ForceClose {
+	ctx, cncl := context.WithCancel(context.Background())
+
+	return &ForceClose{
+		C:     ctx,
+		Close: cncl,
+	}
 }

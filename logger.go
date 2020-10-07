@@ -15,31 +15,43 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
  */
 
-package filedecoder
+package app
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
-func ReadFile(filepath string) []byte {
-	data, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	return data
+type logger struct {
+	file  *os.File
+	debug bool
 }
 
-func Yaml(data []byte, cfgs []interface{}) error {
-	for _, cfg := range cfgs {
-		err := yaml.Unmarshal(data, cfg)
-		if err != nil {
-			return err
-		}
+func newLogger(cfg *ConfigLogger) (*logger, error) {
+	file, err := os.OpenFile(cfg.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
 	}
+	l := &logger{
+		file:  file,
+		debug: cfg.Env == "dev",
+	}
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+	logrus.SetOutput(l)
+	if l.debug {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+	return l, nil
+}
 
-	return nil
+func (l *logger) Write(p []byte) (n int, err error) {
+	if l.debug {
+		n, err = os.Stdout.Write(p)
+	}
+	return l.file.Write(p)
+}
+
+func (l *logger) Close() error {
+	return l.file.Close()
 }
