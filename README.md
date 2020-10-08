@@ -1,5 +1,6 @@
 # go-app
 
+[![codecov](https://codecov.io/gh/deweppro/go-app/branch/master/graph/badge.svg)](https://codecov.io/gh/deweppro/go-app)
 [![Release](https://img.shields.io/github/release/deweppro/go-app.svg?style=flat-square)](https://github.com/deweppro/go-app/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/deweppro/go-app)](https://goreportcard.com/report/github.com/deweppro/go-app)
 [![Build Status](https://travis-ci.com/deweppro/go-app.svg?branch=master)](https://travis-ci.com/deweppro/go-app)
