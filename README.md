@@ -11,7 +11,8 @@
 
 ```yaml
 env: dev
-log: /tmp/log
+log: /var/log/simple.log
+pig: /var/run/simple.pid
 ```
 
 ***main.go***
@@ -27,9 +28,14 @@ import (
 
 var _ app.ServiceInterface = (*Simple)(nil)
 
-type Simple struct{}
+type (
+	Simple       struct{}
+	SimpleConfig struct {
+		Env string `yaml:"env"`
+	}
+)
 
-func NewSimple(_ *app.ConfigLogger) *Simple {
+func NewSimple(_ *SimpleConfig) *Simple {
 	fmt.Println("call NewSimple")
 	return &Simple{}
 }
@@ -45,13 +51,17 @@ func (s *Simple) Down() error {
 }
 
 func main() {
-	app.
-		New("config.yaml").
-		ConfigModels(&app.ConfigLogger{}).
-		Modules(NewSimple).
-		PidFile("/tmp/app.pid").
+	app.New().
+		ConfigFile(
+			"./config.yaml",
+			&SimpleConfig{},
+		).
+		Modules(
+			NewSimple,
+		).
 		Run()
 }
+
 
 ```
 
@@ -59,10 +69,9 @@ func main() {
 
 ***Run the app***
 ```go
-app.New(<path to config file: string>)
-    .ConfigModels(<config objects separate by comma: ...interface{}>)
+app.New()
+    .ConfigFile(<path to config file: string>, <config objects separate by comma: ...interface{}>)
     .Modules(<config objects separate by comma: ...interface{}>)
-    .PidFile(<process id file path: string>)
     .Run()
 ```
 
@@ -130,8 +139,9 @@ func main() {
     s1 := &Simple1{}
     hw := HelloWorld("Hello!!")
 
-    app.New("config.yaml").
-        ConfigModels(
+    app.New().
+        ConfigFile(
+            "config.yaml",
             &debug.ConfigDebug{},
         ).
         Modules(
@@ -140,6 +150,7 @@ func main() {
             NewSimple3,
             Simple4{}
             s1, hw,
-        ).PidFile("/tmp/app.pid").Run()
+        ).
+        Run()
 }
 ```

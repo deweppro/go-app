@@ -9,6 +9,7 @@ package app
 import (
 	"encoding/json"
 	"io/ioutil"
+	"path/filepath"
 
 	"gopkg.in/yaml.v2"
 )
@@ -18,7 +19,7 @@ type sources struct {
 	data     []byte
 }
 
-func newSources(filename string) (*sources, error) {
+func NewSources(filename string) (*sources, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -29,15 +30,18 @@ func newSources(filename string) (*sources, error) {
 	}, nil
 }
 
-func (s *sources) Filename() string {
-	return s.filename
+func (s *sources) Decode(configs ...interface{}) error {
+	ext := filepath.Ext(s.filename)
+	switch ext {
+	case ".json":
+		return s.json(configs...)
+	case ".yml", ".yaml":
+		return s.yaml(configs...)
+	}
+	return ErrBadFileFormat
 }
 
-func (s *sources) Data() []byte {
-	return s.data
-}
-
-func (s *sources) YAML(configs ...interface{}) error {
+func (s *sources) yaml(configs ...interface{}) error {
 	for _, conf := range configs {
 		err := yaml.Unmarshal(s.data, conf)
 		if err != nil {
@@ -47,7 +51,7 @@ func (s *sources) YAML(configs ...interface{}) error {
 	return nil
 }
 
-func (s *sources) JSON(configs ...interface{}) error {
+func (s *sources) json(configs ...interface{}) error {
 	for _, conf := range configs {
 		err := json.Unmarshal(s.data, conf)
 		if err != nil {

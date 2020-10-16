@@ -1,2 +1,3 @@
 env: dev
-log: /dev/null
+log: /dev/stdout
+pig: /tmp/simple.pid

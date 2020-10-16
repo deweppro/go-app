@@ -9,38 +9,27 @@ package app
 import (
 	"os"
 
-	"github.com/sirupsen/logrus"
+	"github.com/deweppro/go-logger"
 )
 
-type logger struct {
-	file  *os.File
-	debug bool
+type log struct {
+	file    *os.File
+	handler logger.Logger
 }
 
-func newLogger(cfg *ConfigLogger) (*logger, error) {
-	file, err := os.OpenFile(cfg.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+func NewLogger(filename string) *log {
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	l := &logger{
-		file:  file,
-		debug: cfg.Env == "dev",
-	}
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(l)
-	if l.debug {
-		logrus.SetLevel(logrus.DebugLevel)
-	}
-	return l, nil
+	return &log{file: file}
 }
 
-func (l *logger) Write(p []byte) (n int, err error) {
-	if l.debug {
-		n, err = os.Stdout.Write(p)
-	}
-	return l.file.Write(p)
+func (l *log) Handler(log logger.Logger) {
+	l.handler = log
+	l.handler.SetOutput(l.file)
 }
 
-func (l *logger) Close() error {
+func (l *log) Close() error {
 	return l.file.Close()
 }

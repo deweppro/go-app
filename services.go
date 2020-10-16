@@ -7,10 +7,8 @@
 package app
 
 import (
+	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 type services struct {
@@ -71,7 +69,7 @@ func (s *services) Add(v ServiceInterface) error {
 }
 
 // Up - start all services
-func (s *services) Up() error {
+func (s *services) Up() (er error) {
 	if s.IsUp() {
 		return ErrDepRunning
 	}
@@ -96,26 +94,20 @@ func (s *services) Up() error {
 }
 
 // Down - stop all services
-func (s *services) Down() error {
+func (s *services) Down() (er error) {
 	if !s.IsUp() {
 		return ErrDepNotRunning
 	}
 	if s.sequence == nil {
 		return ErrDepEmpty
 	}
-	defer func() {
-		if err := recover(); err != nil {
-			logrus.WithField("trace", err).Error("panic on services down")
-		}
-	}()
-	var (
-		e error
-	)
 	for {
 		if err := s.sequence.Current.Down(); err != nil {
-			e = errors.Wrapf(err,
-				"down %s service error",
-				reflect.TypeOf(s.sequence.Current).String(),
+			er = WrapErrors(er, err,
+				fmt.Sprintf(
+					"down %s service error",
+					reflect.TypeOf(s.sequence.Current).String(),
+				),
 			)
 		}
 		if s.sequence.Previous == nil {
@@ -127,5 +119,5 @@ func (s *services) Down() error {
 		s.sequence = s.sequence.Next
 	}
 	s.up = false
-	return e
+	return
 }
