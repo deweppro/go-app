@@ -14,9 +14,14 @@ import (
 
 var _ app.ServiceInterface = (*Simple)(nil)
 
-type Simple struct{}
+type (
+	Simple       struct{}
+	SimpleConfig struct {
+		Env string `yaml:"env"`
+	}
+)
 
-func NewSimple(_ *app.ConfigLogger) *Simple {
+func NewSimple(_ *SimpleConfig) *Simple {
 	fmt.Println("call NewSimple")
 	return &Simple{}
 }
@@ -32,10 +37,13 @@ func (s *Simple) Down() error {
 }
 
 func main() {
-	app.
-		New("config.yaml").
-		ConfigModels(&app.ConfigLogger{}).
-		Modules(NewSimple).
-		PidFile("/tmp/app.pid").
+	app.New().
+		ConfigFile(
+			"./config.yaml",
+			&SimpleConfig{},
+		).
+		Modules(
+			NewSimple,
+		).
 		Run()
 }

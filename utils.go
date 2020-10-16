@@ -6,11 +6,13 @@
 
 package app
 
-//go:generate easyjson
+import (
+	"io/ioutil"
+	"strconv"
+	"syscall"
+)
 
-//easyjson:json
-type ConfigLogger struct {
-	Env     string `yaml:"env" json:"env"`
-	LogFile string `yaml:"log" json:"log"`
-	PidFile string `yaml:"pid" json:"pid"`
+func pid2File(filename string) error {
+	pid := strconv.Itoa(syscall.Getpid())
+	return ioutil.WriteFile(filename, []byte(pid), 0755)
 }

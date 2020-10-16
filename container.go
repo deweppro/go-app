@@ -14,6 +14,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+var types = []string{
+	"invalid",
+	"int", "int8", "int16", "int32", "int64",
+	"uint", "uint8", "uint16", "uint32", "uint64",
+	"uintptr", "float32", "float64", "complex64", "complex128",
+	"bool", "array", "chan", "func", "interface", "map",
+	"ptr", "slice", "string", "struct", "unsafe.Pointer",
+}
+
 type (
 	// DI - managing dependencies
 	DI struct {
@@ -125,7 +134,6 @@ func (_di *DI) Build() error {
 				}
 			}
 		}
-
 	}
 
 	if err := _di.kahn.Build(); err != nil {
@@ -206,4 +214,13 @@ func (_di *DI) di(item interface{}) ([]reflect.Value, error) {
 	}
 
 	return reflect.ValueOf(item).Call(args), nil
+}
+
+func isDefaultType(name string) bool {
+	for _, el := range types {
+		if el == name {
+			return true
+		}
+	}
+	return false
 }

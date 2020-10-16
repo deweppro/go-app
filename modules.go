@@ -10,7 +10,7 @@ type modules struct {
 	data []interface{}
 }
 
-func newModules() *modules {
+func NewModules() *modules {
 	return &modules{
 		data: []interface{}{},
 	}
