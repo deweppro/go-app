@@ -36,48 +36,48 @@ func New() *application {
 	}
 }
 
-func (_app *application) Logger(log logger.Logger) *application {
-	_app.logger = log
-	return _app
+func (a *application) Logger(log logger.Logger) *application {
+	a.logger = log
+	return a
 }
 
-func (_app *application) Modules(modules ...interface{}) *application {
-	_app.modules.Add(modules...)
-	return _app
+func (a *application) Modules(modules ...interface{}) *application {
+	a.modules.Add(modules...)
+	return a
 }
 
-func (_app *application) ConfigFile(filename string, configs ...interface{}) *application {
-	_app.cfile = filename
-	_app.configs.Add(configs...)
-	return _app
+func (a *application) ConfigFile(filename string, configs ...interface{}) *application {
+	a.cfile = filename
+	a.configs.Add(configs...)
+	return a
 }
 
-func (_app *application) Run() {
+func (a *application) Run() {
 	var err error
-	if len(_app.cfile) > 0 {
+	if len(a.cfile) > 0 {
 		// read config file
-		if _app.sources, err = NewSources(_app.cfile); err != nil {
+		if a.sources, err = NewSources(a.cfile); err != nil {
 			panic(err)
 		}
 
 		// init logger
 		config := &ConfigLogger{}
-		if err := _app.sources.Decode(config); err != nil {
+		if err = a.sources.Decode(config); err != nil {
 			panic(err)
 		}
-		_app.logout = NewLogger(config.LogFile)
-		if _app.logger == nil {
-			_app.logger = logger.Default()
+		a.logout = NewLogger(config.LogFile)
+		if a.logger == nil {
+			a.logger = logger.Default()
 		}
-		_app.logout.Handler(_app.logger)
-		_app.modules.Add(func() logger.Logger { return _app.logger }, config, ENV(config.Env))
+		a.logout.Handler(a.logger)
+		a.modules.Add(func() logger.Logger { return a.logger }, config, ENV(config.Env))
 
 		// decode all configs
-		configs := _app.configs.Get()
-		if err := _app.sources.Decode(configs...); err != nil {
+		configs := a.configs.Get()
+		if err = a.sources.Decode(configs...); err != nil {
 			panic(err)
 		}
-		_app.modules.Add(configs...)
+		a.modules.Add(configs...)
 
 		if len(config.PidFile) > 0 {
 			if err = pid2File(config.PidFile); err != nil {
@@ -86,46 +86,46 @@ func (_app *application) Run() {
 		}
 	}
 
-	_app.modules.Add(_app.force)
-	_app.launch()
+	a.modules.Add(a.force)
+	a.launch()
 }
 
-func (_app *application) launch() {
+func (a *application) launch() {
 	var (
 		err error
 		ex  = 0
 	)
 
-	_app.logger.Infof("app register components")
-	if err = _app.packages.Register(_app.modules.Get()); err != nil {
-		_app.logger.Errorf("app register components: %s", err.Error())
+	a.logger.Infof("app register components")
+	if err = a.packages.Register(a.modules.Get()); err != nil {
+		a.logger.Errorf("app register components: %s", err.Error())
 		os.Exit(1)
 	}
 
-	_app.logger.Infof("app build dependency")
-	if err = _app.packages.Build(); err != nil {
-		_app.logger.Errorf("app build dependency: %s", err.Error())
+	a.logger.Infof("app build dependency")
+	if err = a.packages.Build(); err != nil {
+		a.logger.Errorf("app build dependency: %s", err.Error())
 		os.Exit(1)
 	}
 
-	_app.logger.Infof("app up dependency")
-	if err = _app.packages.Up(); err != nil {
-		_app.logger.Errorf("app up dependency: %s", err.Error())
+	a.logger.Infof("app up dependency")
+	if err = a.packages.Up(); err != nil {
+		a.logger.Errorf("app up dependency: %s", err.Error())
 		ex++
 	}
 
 	if err == nil {
-		go OnSyscallStop(_app.force.Close)
-		<-_app.force.C.Done()
+		go OnSyscallStop(a.force.Close)
+		<-a.force.C.Done()
 	}
 
-	_app.logger.Infof("app down dependency")
-	if err = _app.packages.Down(); err != nil {
-		_app.logger.Errorf("app down dependency: %s", err.Error())
+	a.logger.Infof("app down dependency")
+	if err = a.packages.Down(); err != nil {
+		a.logger.Errorf("app down dependency: %s", err.Error())
 		ex++
 	}
 
-	if err = _app.logout.Close(); err != nil {
+	if err = a.logout.Close(); err != nil {
 		panic(err)
 	}
 
