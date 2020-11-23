@@ -11,7 +11,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUnit_YamlConfig(t *testing.T) {
@@ -26,18 +26,18 @@ level: 5
 	)
 
 	f, err := ioutil.TempFile(os.TempDir(), "temp-*-config.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = f.Write(data)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	filename := f.Name()
-	assert.NoError(t, f.Close())
+	require.NoError(t, f.Close())
 	conf, err := NewSources(filename)
-	assert.NoError(t, err)
-	assert.NoError(t, conf.Decode(&c1, &c2))
-	assert.Equal(t, `hello`, c1.LogFile)
-	assert.Equal(t, `dev`, c1.Env)
-	assert.Equal(t, `hello`, c2.LogFile)
-	assert.Equal(t, `dev`, c2.Env)
+	require.NoError(t, err)
+	require.NoError(t, conf.Decode(&c1, &c2))
+	require.Equal(t, `hello`, c1.LogFile)
+	require.Equal(t, `dev`, c1.Env)
+	require.Equal(t, `hello`, c2.LogFile)
+	require.Equal(t, `dev`, c2.Env)
 }
 
 func TestUnit_JsonConfig(t *testing.T) {
@@ -48,16 +48,41 @@ func TestUnit_JsonConfig(t *testing.T) {
 	)
 
 	f, err := ioutil.TempFile(os.TempDir(), "temp-*-config.json")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = f.Write(data)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	filename := f.Name()
-	assert.NoError(t, f.Close())
+	require.NoError(t, f.Close())
 	conf, err := NewSources(filename)
-	assert.NoError(t, err)
-	assert.NoError(t, conf.Decode(&c1, &c2))
-	assert.Equal(t, `hello`, c1.LogFile)
-	assert.Equal(t, `dev`, c1.Env)
-	assert.Equal(t, `hello`, c2.LogFile)
-	assert.Equal(t, `dev`, c2.Env)
+	require.NoError(t, err)
+	require.NoError(t, conf.Decode(&c1, &c2))
+	require.Equal(t, `hello`, c1.LogFile)
+	require.Equal(t, `dev`, c1.Env)
+	require.Equal(t, `hello`, c2.LogFile)
+	require.Equal(t, `dev`, c2.Env)
+}
+
+func TestUnit_TomlConfig(t *testing.T) {
+	var (
+		c1   = ConfigLogger{}
+		c2   = ConfigLogger{}
+		data = []byte(`
+env = "dev"
+log = "hello"
+`)
+	)
+
+	f, err := ioutil.TempFile(os.TempDir(), "temp-*-config.toml")
+	require.NoError(t, err)
+	_, err = f.Write(data)
+	require.NoError(t, err)
+	filename := f.Name()
+	require.NoError(t, f.Close())
+	conf, err := NewSources(filename)
+	require.NoError(t, err)
+	require.NoError(t, conf.Decode(&c1, &c2))
+	require.Equal(t, `hello`, c1.LogFile)
+	require.Equal(t, `dev`, c1.Env)
+	require.Equal(t, `hello`, c2.LogFile)
+	require.Equal(t, `dev`, c2.Env)
 }

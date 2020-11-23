@@ -10,7 +10,7 @@ package app
 
 //easyjson:json
 type ConfigLogger struct {
-	Env     string `yaml:"env" json:"env"`
-	LogFile string `yaml:"log" json:"log"`
-	PidFile string `yaml:"pid" json:"pid"`
+	Env     string `yaml:"env" json:"env" toml:"env"`
+	LogFile string `yaml:"log" json:"log" toml:"log"`
+	PidFile string `yaml:"pid" json:"pid" toml:"pid"`
 }

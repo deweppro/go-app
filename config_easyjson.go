@@ -40,6 +40,8 @@ func easyjson6615c02eDecodeGithubComDewepproGoApp(in *jlexer.Lexer, out *ConfigL
 			out.Env = string(in.String())
 		case "log":
 			out.LogFile = string(in.String())
+		case "pid":
+			out.PidFile = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -63,6 +65,11 @@ func easyjson6615c02eEncodeGithubComDewepproGoApp(out *jwriter.Writer, in Config
 		const prefix string = ",\"log\":"
 		out.RawString(prefix)
 		out.String(string(in.LogFile))
+	}
+	{
+		const prefix string = ",\"pid\":"
+		out.RawString(prefix)
+		out.String(string(in.PidFile))
 	}
 	out.RawByte('}')
 }

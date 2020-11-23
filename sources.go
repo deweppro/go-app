@@ -11,6 +11,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/pelletier/go-toml"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -34,28 +36,19 @@ func (s *sources) Decode(configs ...interface{}) error {
 	ext := filepath.Ext(s.filename)
 	switch ext {
 	case ".json":
-		return s.json(configs...)
+		return s.unmarshal("json unmarshal", json.Unmarshal, configs...)
 	case ".yml", ".yaml":
-		return s.yaml(configs...)
+		return s.unmarshal("yaml unmarshal", yaml.Unmarshal, configs...)
+	case ".toml":
+		return s.unmarshal("toml unmarshal", toml.Unmarshal, configs...)
 	}
 	return ErrBadFileFormat
 }
 
-func (s *sources) yaml(configs ...interface{}) error {
+func (s *sources) unmarshal(title string, call func([]byte, interface{}) error, configs ...interface{}) error {
 	for _, conf := range configs {
-		err := yaml.Unmarshal(s.data, conf)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *sources) json(configs ...interface{}) error {
-	for _, conf := range configs {
-		err := json.Unmarshal(s.data, conf)
-		if err != nil {
-			return err
+		if err := call(s.data, conf); err != nil {
+			return errors.Wrap(err, title)
 		}
 	}
 	return nil
