@@ -3,7 +3,6 @@ module github.com/deweppro/go-app
 go 1.14
 
 require (
-	github.com/BurntSushi/toml v0.3.1
 	github.com/deweppro/go-algorithms v1.1.0
 	github.com/deweppro/go-logger v1.1.0
 	github.com/mailru/easyjson v0.7.6

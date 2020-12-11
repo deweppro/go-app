@@ -1,6 +1,6 @@
-/*
- * Copyright (c) 2020 Mikhail Knyazhev <markus621@gmail.com>.
- * All rights reserved. Use of this source code is governed by a BSD-style
+/**
+ * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
+ * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
 
@@ -16,38 +16,30 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type sources struct {
-	filename string
-	data     []byte
-}
+//Sources model
+type Sources string
 
-func NewSources(filename string) (*sources, error) {
-	data, err := ioutil.ReadFile(filename)
+//Decode unmarshal file to model
+func (s Sources) Decode(configs ...interface{}) error {
+	data, err := ioutil.ReadFile(string(s))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &sources{
-		filename: filename,
-		data:     data,
-	}, nil
-}
-
-func (s *sources) Decode(configs ...interface{}) error {
-	ext := filepath.Ext(s.filename)
+	ext := filepath.Ext(string(s))
 	switch ext {
 	case ".json":
-		return s.unmarshal("json unmarshal", json.Unmarshal, configs...)
+		return s.unmarshal("json unmarshal", data, json.Unmarshal, configs...)
 	case ".yml", ".yaml":
-		return s.unmarshal("yaml unmarshal", yaml.Unmarshal, configs...)
+		return s.unmarshal("yaml unmarshal", data, yaml.Unmarshal, configs...)
 	case ".toml":
-		return s.unmarshal("toml unmarshal", toml.Unmarshal, configs...)
+		return s.unmarshal("toml unmarshal", data, toml.Unmarshal, configs...)
 	}
 	return ErrBadFileFormat
 }
 
-func (s *sources) unmarshal(title string, call func([]byte, interface{}) error, configs ...interface{}) error {
+func (s Sources) unmarshal(title string, data []byte, call func([]byte, interface{}) error, configs ...interface{}) error {
 	for _, conf := range configs {
-		if err := call(s.data, conf); err != nil {
+		if err := call(data, conf); err != nil {
 			return errors.Wrap(err, title)
 		}
 	}

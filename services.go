@@ -1,6 +1,6 @@
-/*
- * Copyright (c) 2020 Mikhail Knyazhev <markus621@gmail.com>.
- * All rights reserved. Use of this source code is governed by a BSD-style
+/**
+ * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
+ * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
 
@@ -18,17 +18,18 @@ type services struct {
 
 type sequence struct {
 	Previous *sequence
-	Current  ServiceInterface
+	Current  Servicer
 	Next     *sequence
 }
 
-type ServiceInterface interface {
+//Servicer interface for services
+type Servicer interface {
 	Up() error
 	Down() error
 }
 
 var (
-	srvType = reflect.TypeOf(new(ServiceInterface)).Elem()
+	srvType = reflect.TypeOf(new(Servicer)).Elem()
 )
 
 func newServices() *services {
@@ -44,7 +45,7 @@ func (s *services) IsUp() bool {
 }
 
 // Add - add new service by interface
-func (s *services) Add(v ServiceInterface) error {
+func (s *services) Add(v Servicer) error {
 	if s.IsUp() {
 		return ErrDepRunning
 	}

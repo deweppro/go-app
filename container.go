@@ -1,6 +1,6 @@
-/*
- * Copyright (c) 2020 Mikhail Knyazhev <markus621@gmail.com>.
- * All rights reserved. Use of this source code is governed by a BSD-style
+/**
+ * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
+ * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
 
@@ -60,7 +60,7 @@ func (d *DI) addr(t typer) string {
 }
 
 // Register - register a new dependency
-func (d *DI) Register(items []interface{}) error {
+func (d *DI) Register(items ...interface{}) error {
 	if d.srv.IsUp() {
 		return ErrDepRunning
 	}
@@ -146,7 +146,7 @@ func (d *DI) Build() error {
 			if values, err := d.di(item); err == nil {
 				for _, value := range values {
 					if value.Type().AssignableTo(srvType) {
-						if err = d.srv.Add(value.Interface().(ServiceInterface)); err != nil {
+						if err = d.srv.Add(value.Interface().(Servicer)); err != nil {
 							return errors.Wrap(err, "cant add element in graph")
 						}
 					}

@@ -1,6 +1,6 @@
-/*
- * Copyright (c) 2020 Mikhail Knyazhev <markus621@gmail.com>.
- * All rights reserved. Use of this source code is governed by a BSD-style
+/**
+ * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
+ * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
 
@@ -31,9 +31,7 @@ level: 5
 	require.NoError(t, err)
 	filename := f.Name()
 	require.NoError(t, f.Close())
-	conf, err := NewSources(filename)
-	require.NoError(t, err)
-	require.NoError(t, conf.Decode(&c1, &c2))
+	require.NoError(t, Sources(filename).Decode(&c1, &c2))
 	require.Equal(t, `hello`, c1.LogFile)
 	require.Equal(t, `dev`, c1.Env)
 	require.Equal(t, `hello`, c2.LogFile)
@@ -53,9 +51,7 @@ func TestUnit_JsonConfig(t *testing.T) {
 	require.NoError(t, err)
 	filename := f.Name()
 	require.NoError(t, f.Close())
-	conf, err := NewSources(filename)
-	require.NoError(t, err)
-	require.NoError(t, conf.Decode(&c1, &c2))
+	require.NoError(t, Sources(filename).Decode(&c1, &c2))
 	require.Equal(t, `hello`, c1.LogFile)
 	require.Equal(t, `dev`, c1.Env)
 	require.Equal(t, `hello`, c2.LogFile)
@@ -78,9 +74,7 @@ log = "hello"
 	require.NoError(t, err)
 	filename := f.Name()
 	require.NoError(t, f.Close())
-	conf, err := NewSources(filename)
-	require.NoError(t, err)
-	require.NoError(t, conf.Decode(&c1, &c2))
+	require.NoError(t, Sources(filename).Decode(&c1, &c2))
 	require.Equal(t, `hello`, c1.LogFile)
 	require.Equal(t, `dev`, c1.Env)
 	require.Equal(t, `hello`, c2.LogFile)

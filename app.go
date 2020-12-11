@@ -1,6 +1,6 @@
-/*
- * Copyright (c) 2020 Mikhail Knyazhev <markus621@gmail.com>.
- * All rights reserved. Use of this source code is governed by a BSD-style
+/**
+ * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
+ * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
 
@@ -13,52 +13,65 @@ import (
 )
 
 type (
+	//ENV type for enviremants (prod, dev, stage, etc)
 	ENV string
 
-	application struct {
+	//App application model
+	App struct {
 		cfile    string
-		configs  *modules
-		modules  *modules
-		sources  *sources
+		configs  Modules
+		modules  Modules
+		sources  Sources
 		packages *DI
-		logout   *log
+		logout   *Log
 		logger   logger.Logger
 		force    *ForceClose
 	}
 )
 
-func New() *application {
-	return &application{
-		modules:  NewModules(),
-		configs:  NewModules(),
+//New create application
+func New() *App {
+	return &App{
+		modules:  Modules{},
+		configs:  Modules{},
 		packages: NewDI(),
 		force:    newForceClose(),
 	}
 }
 
-func (a *application) Logger(log logger.Logger) *application {
+//Logger setup logger
+func (a *App) Logger(log logger.Logger) *App {
 	a.logger = log
 	return a
 }
 
-func (a *application) Modules(modules ...interface{}) *application {
-	a.modules.Add(modules...)
+//Modules append object to modules list
+func (a *App) Modules(modules ...interface{}) *App {
+	for _, mod := range modules {
+		switch mod.(type) {
+		case Modules:
+			a.modules = a.modules.Add(mod.(Modules)...)
+		default:
+			a.modules = a.modules.Add(mod)
+		}
+	}
+
 	return a
 }
 
-func (a *application) ConfigFile(filename string, configs ...interface{}) *application {
+//ConfigFile set config file path and configs models
+func (a *App) ConfigFile(filename string, configs ...interface{}) *App {
 	a.cfile = filename
-	a.configs.Add(configs...)
+	a.configs = a.configs.Add(configs...)
 	return a
 }
 
-func (a *application) Run() {
+//Run run application
+func (a *App) Run() {
 	var err error
 	if len(a.cfile) > 0 {
 		// read config file
-		if a.sources, err = NewSources(a.cfile); err != nil {
-			panic(err)
-		}
+		a.sources = Sources(a.cfile)
 
 		// init logger
 		config := &ConfigLogger{}
@@ -70,14 +83,13 @@ func (a *application) Run() {
 			a.logger = logger.Default()
 		}
 		a.logout.Handler(a.logger)
-		a.modules.Add(func() logger.Logger { return a.logger }, config, ENV(config.Env))
+		a.modules = a.modules.Add(func() logger.Logger { return a.logger }, config, ENV(config.Env))
 
 		// decode all configs
-		configs := a.configs.Get()
-		if err = a.sources.Decode(configs...); err != nil {
+		if err = a.sources.Decode(a.configs...); err != nil {
 			panic(err)
 		}
-		a.modules.Add(configs...)
+		a.modules = a.modules.Add(a.configs...)
 
 		if len(config.PidFile) > 0 {
 			if err = pid2File(config.PidFile); err != nil {
@@ -86,18 +98,18 @@ func (a *application) Run() {
 		}
 	}
 
-	a.modules.Add(a.force)
+	a.modules = a.modules.Add(a.force)
 	a.launch()
 }
 
-func (a *application) launch() {
+func (a *App) launch() {
 	var (
 		err error
 		ex  = 0
 	)
 
 	a.logger.Infof("app register components")
-	if err = a.packages.Register(a.modules.Get()); err != nil {
+	if err = a.packages.Register(a.modules...); err != nil {
 		a.logger.Errorf("app register components: %s", err.Error())
 		os.Exit(1)
 	}
