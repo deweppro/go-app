@@ -1,6 +1,6 @@
-/*
- * Copyright (c) 2020 Mikhail Knyazhev <markus621@gmail.com>.
- * All rights reserved. Use of this source code is governed by a BSD-style
+/**
+ * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
+ * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
 
@@ -11,51 +11,36 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/pelletier/go-toml"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
-type sources struct {
-	filename string
-	data     []byte
-}
+//Sources model
+type Sources string
 
-func NewSources(filename string) (*sources, error) {
-	data, err := ioutil.ReadFile(filename)
+//Decode unmarshal file to model
+func (s Sources) Decode(configs ...interface{}) error {
+	data, err := ioutil.ReadFile(string(s))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &sources{
-		filename: filename,
-		data:     data,
-	}, nil
-}
-
-func (s *sources) Decode(configs ...interface{}) error {
-	ext := filepath.Ext(s.filename)
+	ext := filepath.Ext(string(s))
 	switch ext {
 	case ".json":
-		return s.json(configs...)
+		return s.unmarshal("json unmarshal", data, json.Unmarshal, configs...)
 	case ".yml", ".yaml":
-		return s.yaml(configs...)
+		return s.unmarshal("yaml unmarshal", data, yaml.Unmarshal, configs...)
+	case ".toml":
+		return s.unmarshal("toml unmarshal", data, toml.Unmarshal, configs...)
 	}
 	return ErrBadFileFormat
 }
 
-func (s *sources) yaml(configs ...interface{}) error {
+func (s Sources) unmarshal(title string, data []byte, call func([]byte, interface{}) error, configs ...interface{}) error {
 	for _, conf := range configs {
-		err := yaml.Unmarshal(s.data, conf)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *sources) json(configs ...interface{}) error {
-	for _, conf := range configs {
-		err := json.Unmarshal(s.data, conf)
-		if err != nil {
-			return err
+		if err := call(data, conf); err != nil {
+			return errors.Wrap(err, title)
 		}
 	}
 	return nil

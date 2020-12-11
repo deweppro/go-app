@@ -1,6 +1,6 @@
-/*
- * Copyright (c) 2020 Mikhail Knyazhev <markus621@gmail.com>.
- * All rights reserved. Use of this source code is governed by a BSD-style
+/**
+ * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
+ * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
 
@@ -12,6 +12,7 @@ import (
 	"syscall"
 )
 
+//OnSyscallStop calling a function if you send a system event stop
 func OnSyscallStop(callFunc func()) {
 	quit := make(chan os.Signal, 4)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
@@ -20,6 +21,7 @@ func OnSyscallStop(callFunc func()) {
 	callFunc()
 }
 
+//OnSyscallUp calling a function if you send a system event SIGHUP
 func OnSyscallUp(callFunc func()) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGHUP)

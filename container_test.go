@@ -1,6 +1,6 @@
-/*
- * Copyright (c) 2020 Mikhail Knyazhev <markus621@gmail.com>.
- * All rights reserved. Use of this source code is governed by a BSD-style
+/**
+ * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
+ * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
 
@@ -78,7 +78,7 @@ func TestUnit_Dependencies(t *testing.T) {
 	require.NoError(t, dep.Register([]interface{}{
 		newT1, newT2, newT5, newT6, t4{}, newT7(),
 		1, "hello", true, a, b, newT7i, newT0,
-	}))
+	}...))
 
 	require.NoError(t, dep.Build())
 	require.NoError(t, dep.Up())

@@ -1,6 +1,6 @@
-/*
- * Copyright (c) 2020 Mikhail Knyazhev <markus621@gmail.com>.
- * All rights reserved. Use of this source code is governed by a BSD-style
+/**
+ * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
+ * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
 
@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+//nolint:golint
 var (
 	ErrDepRunning    = errors.New("dependencies is already running")
 	ErrDepNotRunning = errors.New("dependencies are not running yet")
@@ -19,6 +20,7 @@ var (
 	ErrBadFileFormat = errors.New("is not a supported file format")
 )
 
+//WrapErrors combining multiple errors
 func WrapErrors(err1, err2 error, message string) error {
 	if err2 == nil {
 		return err1

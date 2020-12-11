@@ -1,26 +1,23 @@
-/*
- * Copyright (c) 2020 Mikhail Knyazhev <markus621@gmail.com>.
- * All rights reserved. Use of this source code is governed by a BSD-style
+/**
+ * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
+ * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
 
 package app
 
-type modules struct {
-	data []interface{}
-}
+//Modules DI container
+type Modules []interface{}
 
-func NewModules() *modules {
-	return &modules{
-		data: []interface{}{},
+//Add object to container
+func (m Modules) Add(v ...interface{}) Modules {
+	for _, mod := range v {
+		switch mod.(type) {
+		case Modules:
+			m = m.Add(mod.(Modules)...)
+		default:
+			m = append(m, mod)
+		}
 	}
-}
-
-func (m *modules) Add(a ...interface{}) *modules {
-	m.data = append(m.data, a...)
 	return m
-}
-
-func (m *modules) Get() []interface{} {
-	return m.data
 }

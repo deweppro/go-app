@@ -26,25 +26,30 @@ import (
 	"github.com/deweppro/go-app"
 )
 
-var _ app.ServiceInterface = (*Simple)(nil)
+var _ app.Servicer = (*Simple)(nil)
 
 type (
-	Simple       struct{}
+	//Simple model
+	Simple struct{}
+	//SimpleConfig config model
 	SimpleConfig struct {
 		Env string `yaml:"env"`
 	}
 )
 
+//NewSimple init Simple
 func NewSimple(_ *SimpleConfig) *Simple {
 	fmt.Println("call NewSimple")
 	return &Simple{}
 }
 
+//Up  method for start Simple in DI container
 func (s *Simple) Up() error {
 	fmt.Println("call *Simple.Up")
 	return nil
 }
 
+//Down  method for stop Simple in DI container
 func (s *Simple) Down() error {
 	fmt.Println("call *Simple.Down")
 	return nil
@@ -61,8 +66,6 @@ func main() {
 		).
 		Run()
 }
-
-
 ```
 
 ## HowTo
@@ -100,7 +103,7 @@ func (s2 *Simple2) Get() string {
 *If the object has the `Up() error` and `Down() error` methods, they will be called `Up() error`  when the app starts, and `Down() error` when it finishes. This allows you to automatically start and stop routine processes inside the module*
 
 ```go
-var _ app.ServiceInterface = (*Simple3)(nil)
+var _ app.Servicer = (*Simple3)(nil)
 type Simple3 struct{}
 func NewSimple3(_ *Simple4) *Simple3 { return &Simple3{} }
 func (s3 *Simple3) Up() error { return nil }
