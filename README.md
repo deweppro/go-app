@@ -5,17 +5,30 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/deweppro/go-app)](https://goreportcard.com/report/github.com/deweppro/go-app)
 [![Build Status](https://travis-ci.com/deweppro/go-app.svg?branch=master)](https://travis-ci.com/deweppro/go-app)
 
-## simple
+## Install
+
+```shell
+go get -u github.com/deweppro/go-app
+```
+
+## Base config file
 
 ***config.yaml***
 
 ```yaml
 env: dev
+level: 3 
 log: /var/log/simple.log
 pig: /var/run/simple.pid
 ```
 
-***main.go***
+level: 
+* 0 - error only
+* 1 - + warning
+* 2 - + info
+* 3 - + debug
+
+## Example
 
 ```go
 package main
@@ -24,6 +37,7 @@ import (
 	"fmt"
 
 	"github.com/deweppro/go-app"
+	"github.com/deweppro/go-logger"
 )
 
 var _ app.Servicer = (*Simple)(nil)
@@ -57,6 +71,7 @@ func (s *Simple) Down() error {
 
 func main() {
 	app.New().
+		Logger(logger.Default()).
 		ConfigFile(
 			"./config.yaml",
 			&SimpleConfig{},
@@ -66,6 +81,7 @@ func main() {
 		).
 		Run()
 }
+
 ```
 
 ## HowTo
@@ -143,6 +159,7 @@ func main() {
     hw := HelloWorld("Hello!!")
 
     app.New().
+        Logger(logger.Default()).
         ConfigFile(
             "config.yaml",
             &debug.ConfigDebug{},
@@ -151,7 +168,7 @@ func main() {
             debug.New,
             NewSimple2,
             NewSimple3,
-            Simple4{}
+            Simple4{},
             s1, hw,
         ).
         Run()

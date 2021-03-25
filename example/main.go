@@ -1,15 +1,10 @@
-/**
- * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the LICENSE file.
- */
-
 package main
 
 import (
 	"fmt"
 
 	"github.com/deweppro/go-app"
+	"github.com/deweppro/go-logger"
 )
 
 var _ app.Servicer = (*Simple)(nil)
@@ -43,6 +38,7 @@ func (s *Simple) Down() error {
 
 func main() {
 	app.New().
+		Logger(logger.Default()).
 		ConfigFile(
 			"./config.yaml",
 			&SimpleConfig{},

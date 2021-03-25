@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson6615c02eDecodeGithubComDewepproGoApp(in *jlexer.Lexer, out *ConfigLogger) {
+func easyjson6615c02eDecodeGithubComDewepproGoApp(in *jlexer.Lexer, out *BaseConfig) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -38,10 +38,12 @@ func easyjson6615c02eDecodeGithubComDewepproGoApp(in *jlexer.Lexer, out *ConfigL
 		switch key {
 		case "env":
 			out.Env = string(in.String())
-		case "log":
-			out.LogFile = string(in.String())
 		case "pid":
 			out.PidFile = string(in.String())
+		case "level":
+			out.Level = uint32(in.Uint32())
+		case "log":
+			out.LogFile = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -52,7 +54,7 @@ func easyjson6615c02eDecodeGithubComDewepproGoApp(in *jlexer.Lexer, out *ConfigL
 		in.Consumed()
 	}
 }
-func easyjson6615c02eEncodeGithubComDewepproGoApp(out *jwriter.Writer, in ConfigLogger) {
+func easyjson6615c02eEncodeGithubComDewepproGoApp(out *jwriter.Writer, in BaseConfig) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -62,38 +64,43 @@ func easyjson6615c02eEncodeGithubComDewepproGoApp(out *jwriter.Writer, in Config
 		out.String(string(in.Env))
 	}
 	{
-		const prefix string = ",\"log\":"
-		out.RawString(prefix)
-		out.String(string(in.LogFile))
-	}
-	{
 		const prefix string = ",\"pid\":"
 		out.RawString(prefix)
 		out.String(string(in.PidFile))
+	}
+	{
+		const prefix string = ",\"level\":"
+		out.RawString(prefix)
+		out.Uint32(uint32(in.Level))
+	}
+	{
+		const prefix string = ",\"log\":"
+		out.RawString(prefix)
+		out.String(string(in.LogFile))
 	}
 	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v ConfigLogger) MarshalJSON() ([]byte, error) {
+func (v BaseConfig) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjson6615c02eEncodeGithubComDewepproGoApp(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v ConfigLogger) MarshalEasyJSON(w *jwriter.Writer) {
+func (v BaseConfig) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson6615c02eEncodeGithubComDewepproGoApp(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *ConfigLogger) UnmarshalJSON(data []byte) error {
+func (v *BaseConfig) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjson6615c02eDecodeGithubComDewepproGoApp(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *ConfigLogger) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *BaseConfig) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson6615c02eDecodeGithubComDewepproGoApp(l, v)
 }

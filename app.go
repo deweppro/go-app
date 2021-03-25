@@ -1,9 +1,3 @@
-/**
- * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the LICENSE file.
- */
-
 package app
 
 import (
@@ -74,16 +68,16 @@ func (a *App) Run() {
 		a.sources = Sources(a.cfile)
 
 		// init logger
-		config := &ConfigLogger{}
+		config := &BaseConfig{}
 		if err = a.sources.Decode(config); err != nil {
 			panic(err)
 		}
-		a.logout = NewLogger(config.LogFile)
+		a.logout = NewLogger(config)
 		if a.logger == nil {
 			a.logger = logger.Default()
 		}
 		a.logout.Handler(a.logger)
-		a.modules = a.modules.Add(func() logger.Logger { return a.logger }, config, ENV(config.Env))
+		a.modules = a.modules.Add(func() logger.Logger { return a.logger }, ENV(config.Env))
 
 		// decode all configs
 		if err = a.sources.Decode(a.configs...); err != nil {
@@ -110,14 +104,12 @@ func (a *App) launch() {
 
 	a.logger.Infof("app register components")
 	if err = a.packages.Register(a.modules...); err != nil {
-		a.logger.Errorf("app register components: %s", err.Error())
-		os.Exit(1)
+		a.logger.Fatalf("app register components: %s", err.Error())
 	}
 
 	a.logger.Infof("app build dependency")
 	if err = a.packages.Build(); err != nil {
-		a.logger.Errorf("app build dependency: %s", err.Error())
-		os.Exit(1)
+		a.logger.Fatalf("app build dependency: %s", err.Error())
 	}
 
 	a.logger.Infof("app up dependency")

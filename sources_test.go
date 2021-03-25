@@ -1,9 +1,3 @@
-/**
- * Copyright 2020 Mikhail Knyazhev <markus621@gmail.com>. All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the LICENSE file.
- */
-
 package app
 
 import (
@@ -16,8 +10,8 @@ import (
 
 func TestUnit_YamlConfig(t *testing.T) {
 	var (
-		c1   = ConfigLogger{}
-		c2   = ConfigLogger{}
+		c1   = BaseConfig{}
+		c2   = BaseConfig{}
 		data = []byte(`
 env: dev
 log: hello
@@ -40,8 +34,8 @@ level: 5
 
 func TestUnit_JsonConfig(t *testing.T) {
 	var (
-		c1   = ConfigLogger{}
-		c2   = ConfigLogger{}
+		c1   = BaseConfig{}
+		c2   = BaseConfig{}
 		data = []byte(`{"env":"dev","log":"hello","level":5}`)
 	)
 
@@ -60,8 +54,8 @@ func TestUnit_JsonConfig(t *testing.T) {
 
 func TestUnit_TomlConfig(t *testing.T) {
 	var (
-		c1   = ConfigLogger{}
-		c2   = ConfigLogger{}
+		c1   = BaseConfig{}
+		c2   = BaseConfig{}
 		data = []byte(`
 env = "dev"
 log = "hello"
