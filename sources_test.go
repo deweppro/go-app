@@ -1,17 +1,18 @@
-package app
+package app_test
 
 import (
 	"io/ioutil"
 	"os"
 	"testing"
 
+	"github.com/deweppro/go-app"
 	"github.com/stretchr/testify/require"
 )
 
 func TestUnit_YamlConfig(t *testing.T) {
 	var (
-		c1   = BaseConfig{}
-		c2   = BaseConfig{}
+		c1   = app.BaseConfig{}
+		c2   = app.BaseConfig{}
 		data = []byte(`
 env: dev
 log: hello
@@ -25,7 +26,7 @@ level: 5
 	require.NoError(t, err)
 	filename := f.Name()
 	require.NoError(t, f.Close())
-	require.NoError(t, Sources(filename).Decode(&c1, &c2))
+	require.NoError(t, app.Sources(filename).Decode(&c1, &c2))
 	require.Equal(t, `hello`, c1.LogFile)
 	require.Equal(t, `dev`, c1.Env)
 	require.Equal(t, `hello`, c2.LogFile)
@@ -34,8 +35,8 @@ level: 5
 
 func TestUnit_JsonConfig(t *testing.T) {
 	var (
-		c1   = BaseConfig{}
-		c2   = BaseConfig{}
+		c1   = app.BaseConfig{}
+		c2   = app.BaseConfig{}
 		data = []byte(`{"env":"dev","log":"hello","level":5}`)
 	)
 
@@ -45,7 +46,7 @@ func TestUnit_JsonConfig(t *testing.T) {
 	require.NoError(t, err)
 	filename := f.Name()
 	require.NoError(t, f.Close())
-	require.NoError(t, Sources(filename).Decode(&c1, &c2))
+	require.NoError(t, app.Sources(filename).Decode(&c1, &c2))
 	require.Equal(t, `hello`, c1.LogFile)
 	require.Equal(t, `dev`, c1.Env)
 	require.Equal(t, `hello`, c2.LogFile)
@@ -54,8 +55,8 @@ func TestUnit_JsonConfig(t *testing.T) {
 
 func TestUnit_TomlConfig(t *testing.T) {
 	var (
-		c1   = BaseConfig{}
-		c2   = BaseConfig{}
+		c1   = app.BaseConfig{}
+		c2   = app.BaseConfig{}
 		data = []byte(`
 env = "dev"
 log = "hello"
@@ -68,7 +69,7 @@ log = "hello"
 	require.NoError(t, err)
 	filename := f.Name()
 	require.NoError(t, f.Close())
-	require.NoError(t, Sources(filename).Decode(&c1, &c2))
+	require.NoError(t, app.Sources(filename).Decode(&c1, &c2))
 	require.Equal(t, `hello`, c1.LogFile)
 	require.Equal(t, `dev`, c1.Env)
 	require.Equal(t, `hello`, c2.LogFile)

@@ -73,10 +73,7 @@ func (d *DI) Register(items ...interface{}) error {
 				d.all[n] = item
 			}
 
-		case reflect.Struct:
-			d.all[d.addr(reflect.New(reflect.TypeOf(item)).Type())] = item
-
-		case reflect.Ptr:
+		case reflect.Ptr, reflect.Struct:
 			d.all[d.addr(ref)] = item
 
 		default:
@@ -134,9 +131,17 @@ func (d *DI) Build() error {
 		return errors.Wrap(err, "cant build graph")
 	}
 
+	names := make(map[string]struct{})
 	for _, name := range d.kahn.Result() {
-		if item, ok := d.all[name]; ok {
+		names[name] = struct{}{}
+	}
 
+	for _, name := range d.kahn.Result() {
+		if _, ok := names[name]; !ok {
+			continue
+		}
+
+		if item, ok := d.all[name]; ok {
 			if values, err := d.di(item); err == nil {
 				for _, value := range values {
 					if value.Type().AssignableTo(srvType) {
@@ -144,15 +149,16 @@ func (d *DI) Build() error {
 							return errors.Wrap(err, "cant add element in graph")
 						}
 					}
-
-					d.all[name] = value.Interface()
+					name = d.addr(value.Type())
+					delete(names, name)
+					d.all[d.addr(value.Type())] = value.Interface()
 				}
 			} else if !errors.Is(err, ErrBadAction) {
 				return errors.Wrapf(err, "cant initialize %s", name)
 			}
 
 		} else {
-			return ErrDepUnknown
+			return errors.Wrapf(ErrDepUnknown, "dep: %s", name)
 		}
 	}
 
@@ -187,7 +193,7 @@ func (d *DI) di(item interface{}) ([]reflect.Value, error) {
 			if el, ok := d.all[in]; ok {
 				args = append(args, reflect.ValueOf(el))
 			} else {
-				return nil, errors.Wrap(ErrDepUnknown, in)
+				return nil, errors.Wrapf(ErrDepUnknown, "dep: %s", in)
 			}
 		}
 
@@ -195,7 +201,7 @@ func (d *DI) di(item interface{}) ([]reflect.Value, error) {
 		value := reflect.New(ref)
 		for i := 0; i < ref.NumField(); i++ {
 			in := d.addr(ref.Field(i).Type)
-			if el, has := d.all[in]; has {
+			if el, ok := d.all[in]; ok {
 				value.Elem().FieldByName(ref.Field(i).Name).Set(reflect.ValueOf(el))
 			} else {
 				return nil, errors.Wrap(ErrDepUnknown, in)

@@ -1,8 +1,10 @@
-package app
+package app_test
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/deweppro/go-app"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,9 +46,9 @@ type t5 struct{}
 func newT5() *t5         { return &t5{} }
 func (t5 *t5) V() string { return "t5V" }
 
-type t6 struct{ T4 *t4 }
+type t6 struct{ T4 t4 }
 
-func newT6(t4 *t4) *t6   { return &t6{T4: t4} }
+func newT6(t4 t4) *t6    { return &t6{T4: t4} }
 func (t6 *t6) V() string { return "t6V" }
 
 type t7 struct{}
@@ -63,7 +65,7 @@ type ii interface {
 func newT7i() ii { return &t7{} }
 
 func TestUnit_Dependencies(t *testing.T) {
-	dep := NewDI()
+	dep := app.NewDI()
 
 	var a hello
 	a = "hhhh"
@@ -90,6 +92,38 @@ func TestUnit_Dependencies(t *testing.T) {
 
 	}))
 
+	require.NoError(t, dep.Down())
+	require.Error(t, dep.Down())
+}
+
+type demo1 struct{}
+type demo2 struct{}
+type demo3 struct{}
+
+func newDemo() (*demo1, *demo2, *demo3) { return &demo1{}, &demo2{}, &demo3{} }
+func (d *demo1) Up() error {
+	fmt.Println("demo1 up")
+	return nil
+}
+func (d *demo1) Down() error {
+	fmt.Println("demo1 down")
+	return nil
+}
+
+func TestUnit_Dependencies2(t *testing.T) {
+	dep := app.NewDI()
+
+	fmt.Println("add")
+	require.NoError(t, dep.Register([]interface{}{
+		newDemo,
+	}...))
+
+	fmt.Println("build")
+	require.NoError(t, dep.Build())
+	fmt.Println("up")
+	require.NoError(t, dep.Up())
+	require.Error(t, dep.Up())
+	fmt.Println("down")
 	require.NoError(t, dep.Down())
 	require.Error(t, dep.Down())
 }

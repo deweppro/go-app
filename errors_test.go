@@ -1,28 +1,29 @@
-package app
+package app_test
 
 import (
 	"errors"
 	"testing"
 
+	"github.com/deweppro/go-app"
 	"github.com/stretchr/testify/require"
 )
 
 func TestWrapErrors(t *testing.T) {
 	require.Equal(
 		t,
-		WrapErrors(nil, errors.New("Hello"), "test").Error(),
+		app.WrapErrors(nil, errors.New("Hello"), "test").Error(),
 		"test: Hello",
 	)
 
 	require.Equal(
 		t,
-		WrapErrors(nil, nil, "test"),
+		app.WrapErrors(nil, nil, "test"),
 		nil,
 	)
 
 	require.Equal(
 		t,
-		WrapErrors(errors.New("Hello"), errors.New("World"), "test").Error(),
+		app.WrapErrors(errors.New("Hello"), errors.New("World"), "test").Error(),
 		"test: World: Hello",
 	)
 }
