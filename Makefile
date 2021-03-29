@@ -9,5 +9,3 @@ tests:
 
 pre-commite: generate lint tests
 
-run:
-	cd ./example && go run main.go

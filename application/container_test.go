@@ -1,10 +1,11 @@
-package app_test
+package application_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/deweppro/go-app"
+	"github.com/deweppro/go-app/application"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -65,7 +66,7 @@ type ii interface {
 func newT7i() ii { return &t7{} }
 
 func TestUnit_Dependencies(t *testing.T) {
-	dep := app.NewDI()
+	dep := application.NewDI()
 
 	var a hello
 	a = "hhhh"
@@ -111,7 +112,7 @@ func (d *demo1) Down() error {
 }
 
 func TestUnit_Dependencies2(t *testing.T) {
-	dep := app.NewDI()
+	dep := application.NewDI()
 
 	fmt.Println("add")
 	require.NoError(t, dep.Register([]interface{}{

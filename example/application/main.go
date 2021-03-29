@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/deweppro/go-app"
+	"github.com/deweppro/go-app/application"
 	"github.com/deweppro/go-logger"
 )
 
-var _ app.Servicer = (*Simple)(nil)
+var _ application.Servicer = (*Simple)(nil)
 
 type (
 	//Simple model
@@ -37,7 +37,7 @@ func (s *Simple) Down() error {
 }
 
 func main() {
-	app.New().
+	application.New().
 		Logger(logger.Default()).
 		ConfigFile(
 			"./config.yaml",
