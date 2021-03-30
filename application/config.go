@@ -1,4 +1,4 @@
-package app
+package application
 
 //go:generate easyjson
 

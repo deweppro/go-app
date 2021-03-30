@@ -1,4 +1,4 @@
-package app
+package application
 
 //Modules DI container
 type Modules []interface{}
