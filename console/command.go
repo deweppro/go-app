@@ -112,10 +112,7 @@ func (c *Command) Validate() error {
 	if reflect.ValueOf(c.execute).Kind() != reflect.Func {
 		return fmt.Errorf("command %s: ExecFunc is not a func", c.name)
 	}
-	count := c.flags.Count()
-	if c.args.Count > 0 {
-		count++
-	}
+	count := c.flags.Count() + 1
 	if reflect.ValueOf(c.execute).Type().NumIn() != count {
 		return fmt.Errorf("command \"%s\" Flags: fewer arguments declared than expected in ExecFunc", c.name)
 	}
