@@ -118,7 +118,7 @@ func (c *Console) run(command CommandGetter, a []string, args *Args) {
 			rv = append(rv, reflect.ValueOf(val))
 		}
 	} else {
-		rv = append(rv, reflect.ValueOf(nil))
+		rv = append(rv, reflect.ValueOf([]string{}))
 	}
 
 	err := command.Flags().Call(args, func(i interface{}) {
