@@ -14,3 +14,7 @@
 .idea/
 .vscode/
 coverage.txt
+coverage.out
+bin/
+.tools/
+vendor/
