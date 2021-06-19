@@ -19,7 +19,7 @@ build:
 
 tests:
 	go test -race -v -covermode=atomic -coverprofile=coverage.out ./...
-	$(TOOLS_BIN)/goveralls -coverprofile=coverage.out -service=github
+	$(TOOLS_BIN)/goveralls -coverprofile=coverage.out -service=github -repotoken $(COVERALLS_TOKEN)
 
 pre-commite: generate lint tests
 
