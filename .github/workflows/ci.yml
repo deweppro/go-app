@@ -18,4 +18,6 @@ jobs:
           go-version: 1.16
 
       - name: CI
+        env:
+          COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
         run: make ci
