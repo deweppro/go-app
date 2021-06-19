@@ -42,11 +42,11 @@ func (a *App) Logger(log logger.Logger) *App {
 //Modules append object to modules list
 func (a *App) Modules(modules ...interface{}) *App {
 	for _, mod := range modules {
-		switch mod.(type) {
+		switch v := mod.(type) {
 		case Modules:
-			a.modules = a.modules.Add(mod.(Modules)...)
+			a.modules = a.modules.Add(v...)
 		default:
-			a.modules = a.modules.Add(mod)
+			a.modules = a.modules.Add(v)
 		}
 	}
 

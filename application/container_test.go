@@ -68,8 +68,7 @@ func newT7i() ii { return &t7{} }
 func TestUnit_Dependencies(t *testing.T) {
 	dep := application.NewDI()
 
-	var a hello
-	a = "hhhh"
+	a := hello("hhhh")
 	b := "gggg"
 
 	require.NoError(t, dep.Register([]interface{}{
