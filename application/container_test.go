@@ -57,6 +57,11 @@ type t7 struct{}
 func newT7() *t7         { return &t7{} }
 func (t7 *t7) V() string { return "t7V" }
 
+type t8 struct{}
+
+func newT8() (*t8, error) { return &t8{}, nil }
+func (t8 *t8) V() string  { return "t8V" }
+
 type hello string
 
 type ii interface {
@@ -72,7 +77,7 @@ func TestUnit_Dependencies(t *testing.T) {
 	b := "gggg"
 
 	require.NoError(t, dep.Register([]interface{}{
-		newT1, newT2, newT5, newT6, t4{}, newT7(),
+		newT1, newT2, newT5, newT6, t4{}, newT7(), newT8,
 		1, "hello", true, a, b, newT7i, newT0,
 	}...))
 
@@ -80,11 +85,12 @@ func TestUnit_Dependencies(t *testing.T) {
 	require.NoError(t, dep.Up())
 	require.Error(t, dep.Up())
 
-	require.NoError(t, dep.Inject(func(a *t6, b ii, c hello) {
+	require.NoError(t, dep.Inject(func(a *t6, b ii, c hello, d *t8) {
 		require.Equal(t, "t6V", a.V())
 		require.Equal(t, "t0V", a.T4.T0.V())
 		require.Equal(t, "t1V", a.T4.T1.V())
 		require.Equal(t, "t7V", b.V())
+		require.Equal(t, "t8V", d.V())
 		require.Equal(t, hello("hhhh"), c)
 	}))
 
@@ -112,18 +118,26 @@ func (d *demo1) Down() error {
 
 func TestUnit_Dependencies2(t *testing.T) {
 	dep := application.NewDI()
-
-	fmt.Println("add")
 	require.NoError(t, dep.Register([]interface{}{
 		newDemo,
 	}...))
-
-	fmt.Println("build")
 	require.NoError(t, dep.Build())
-	fmt.Println("up")
 	require.NoError(t, dep.Up())
 	require.Error(t, dep.Up())
-	fmt.Println("down")
 	require.NoError(t, dep.Down())
 	require.Error(t, dep.Down())
+}
+
+type demo4 struct{}
+
+func newDemo4() (*demo4, error) { return nil, fmt.Errorf("fail init constructor demo4") }
+
+func TestUnit_Dependencies3(t *testing.T) {
+	dep := application.NewDI()
+	require.NoError(t, dep.Register([]interface{}{
+		newDemo4,
+	}...))
+	err := dep.Build()
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "cant initialize github.com/deweppro/go-app/application_test:*application_test.demo4: fail init constructor demo4")
 }

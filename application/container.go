@@ -15,6 +15,7 @@ var types = []string{
 	"uintptr", "float32", "float64", "complex64", "complex128",
 	"bool", "array", "chan", "func", "interface", "map",
 	"ptr", "slice", "string", "struct", "unsafe.Pointer",
+	"error",
 }
 
 type (
@@ -213,7 +214,14 @@ func (d *DI) di(item interface{}) ([]reflect.Value, error) {
 		return nil, ErrBadAction
 	}
 
-	return reflect.ValueOf(item).Call(args), nil
+	result := reflect.ValueOf(item).Call(args)
+	for _, v := range result {
+		if err, ok := v.Interface().(error); ok && err != nil {
+			return nil, err
+		}
+	}
+
+	return result, nil
 }
 
 func isDefaultType(name string) bool {

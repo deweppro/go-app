@@ -21,6 +21,6 @@ tests:
 	go test -race -v -covermode=atomic -coverprofile=coverage.out ./...
 	$(TOOLS_BIN)/goveralls -coverprofile=coverage.out -repotoken $(COVERALLS_TOKEN)
 
-pre-commite: generate lint tests
+pre-commite: install generate lint tests
 
 ci: install build lint tests
