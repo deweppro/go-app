@@ -1,13 +1,12 @@
-package application
+package source
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/pelletier/go-toml"
-	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
+	e "github.com/deweppro/go-app/application/error"
+	"github.com/deweppro/go-errors"
+	"gopkg.in/yaml.v3"
 )
 
 //Sources model
@@ -21,20 +20,16 @@ func (s Sources) Decode(configs ...interface{}) error {
 	}
 	ext := filepath.Ext(string(s))
 	switch ext {
-	case ".json":
-		return s.unmarshal("json unmarshal", data, json.Unmarshal, configs...)
 	case ".yml", ".yaml":
 		return s.unmarshal("yaml unmarshal", data, yaml.Unmarshal, configs...)
-	case ".toml":
-		return s.unmarshal("toml unmarshal", data, toml.Unmarshal, configs...)
 	}
-	return ErrBadFileFormat
+	return e.ErrBadFileFormat
 }
 
 func (s Sources) unmarshal(title string, data []byte, call func([]byte, interface{}) error, configs ...interface{}) error {
 	for _, conf := range configs {
 		if err := call(data, conf); err != nil {
-			return errors.Wrap(err, title)
+			return errors.WrapMessage(err, title)
 		}
 	}
 	return nil

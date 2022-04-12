@@ -25,52 +25,50 @@ package main
 import (
 	"fmt"
 
-	"github.com/deweppro/go-app"
+	"github.com/deweppro/go-app/application"
+	"github.com/deweppro/go-app/application/ctx"
 	"github.com/deweppro/go-logger"
 )
-
-var _ app.Servicer = (*Simple)(nil)
 
 type (
 	//Simple model
 	Simple struct{}
-	//SimpleConfig config model
-	SimpleConfig struct {
+	//Config model
+	Config struct {
 		Env string `yaml:"env"`
 	}
 )
 
 //NewSimple init Simple
-func NewSimple(_ *SimpleConfig) *Simple {
-	fmt.Println("call NewSimple")
+func NewSimple(_ Config) *Simple {
+	fmt.Println("--> call NewSimple")
 	return &Simple{}
 }
 
 //Up  method for start Simple in DI container
-func (s *Simple) Up() error {
-	fmt.Println("call *Simple.Up")
+func (s *Simple) Up(_ ctx.Context) error {
+	fmt.Println("--> call *Simple.Up")
 	return nil
 }
 
 //Down  method for stop Simple in DI container
-func (s *Simple) Down() error {
-	fmt.Println("call *Simple.Down")
+func (s *Simple) Down(_ ctx.Context) error {
+	fmt.Println("--> call *Simple.Down")
 	return nil
 }
 
 func main() {
-	app.New().
+	application.New().
 		Logger(logger.Default()).
 		ConfigFile(
 			"./config.yaml",
-			&SimpleConfig{},
+			Config{},
 		).
 		Modules(
 			NewSimple,
 		).
 		Run()
 }
-
 ```
 
 ## HowTo
@@ -105,14 +103,14 @@ func (s2 *Simple2) Get() string {
 }
 ```
 
-*If the object has the `Up() error` and `Down() error` methods, they will be called `Up() error`  when the app starts, and `Down() error` when it finishes. This allows you to automatically start and stop routine processes inside the module*
+*If the object has the `Up(ctx.Context) error` and `Down(ctx.Context) error` methods, they will be called `Up(ctx.Context) error`  when the app starts, and `Down(ctx.Context) error` when it finishes. This allows you to automatically start and stop routine processes inside the module*
 
 ```go
-var _ app.Servicer = (*Simple3)(nil)
+var _ service.IServiceCtx = (*Simple3)(nil)
 type Simple3 struct{}
 func NewSimple3(_ *Simple4) *Simple3 { return &Simple3{} }
-func (s3 *Simple3) Up() error { return nil }
-func (s3 *Simple3) Down() error { return nil }
+func (s3 *Simple3) Up(_ ctx.Context) error { return nil }
+func (s3 *Simple3) Down(_ ctx.Context) error { return nil }
 ```
 
 * Named type
@@ -136,30 +134,4 @@ type Simple4 struct{
 ```go
 s1 := &Simple1{}
 hw := HelloWorld("Hello!!")
-```
-
-
-## Example of initialization of all types
-
-```go
-func main() {
-	
-    s1 := &Simple1{}
-    hw := HelloWorld("Hello!!")
-
-    app.New().
-        Logger(logger.Default()).
-        ConfigFile(
-            "config.yaml",
-            &debug.ConfigDebug{},
-        ).
-        Modules(
-            debug.New,
-            NewSimple2,
-            NewSimple3,
-            Simple4{},
-            s1, hw,
-        ).
-        Run()
-}
 ```

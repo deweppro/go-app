@@ -1,0 +1,7 @@
+env: dev
+level: 4
+log: /dev/stdout
+pig: /tmp/simple.pid
+
+http:
+  aaa: 000

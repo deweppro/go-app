@@ -1,4 +1,4 @@
-package application
+package internal
 
 import (
 	"io/ioutil"
@@ -6,7 +6,8 @@ import (
 	"syscall"
 )
 
-func pid2File(filename string) error {
+//PidFile write pid file
+func PidFile(filename string) error {
 	pid := strconv.Itoa(syscall.Getpid())
 	return ioutil.WriteFile(filename, []byte(pid), 0755)
 }
