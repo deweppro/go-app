@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/pkg/errors"
+	"github.com/deweppro/go-errors"
 )
 
 //nolint: golint
@@ -89,18 +89,22 @@ func colorln(c, msg string, args []interface{}) {
 	color(c, msg, args)
 }
 
+//Infof console message writer for info level
 func Infof(msg string, args ...interface{}) {
-	colorln(ANSI_RESET, "[INF]"+msg, args)
+	colorln(ANSI_RESET, "[INF] "+msg, args)
 }
 
+//Warnf console message writer for warning level
 func Warnf(msg string, args ...interface{}) {
-	colorln(ANSI_YELLOW, "[WAR]"+msg, args)
+	colorln(ANSI_YELLOW, "[WAR] "+msg, args)
 }
 
+//Errorf console message writer for error level
 func Errorf(msg string, args ...interface{}) {
-	colorln(ANSI_RED, "[ERR]"+msg, args)
+	colorln(ANSI_RED, "[ERR] "+msg, args)
 }
 
+//ShowDebug init show debug
 func ShowDebug(ok bool) {
 	var v uint32 = 0
 	if ok {
@@ -109,19 +113,22 @@ func ShowDebug(ok bool) {
 	atomic.StoreUint32(&debugLevel, v)
 }
 
+//Debugf console message writer for debug level
 func Debugf(msg string, args ...interface{}) {
 	if atomic.LoadUint32(&debugLevel) > 0 {
-		colorln(ANSI_BLUE, "[DEB]"+msg, args)
+		colorln(ANSI_BLUE, "[DEB] "+msg, args)
 	}
 }
 
+//FatalIfErr console message writer if err is not nil
 func FatalIfErr(err error, msg string, args ...interface{}) {
 	if err != nil {
-		Fatalf(errors.Wrapf(err, msg, args...).Error())
+		Fatalf(errors.WrapMessage(err, msg, args...).Error())
 	}
 }
 
+//Fatalf console message writer with exit code 1
 func Fatalf(msg string, args ...interface{}) {
-	colorln(ANSI_RED, "[ERR]"+msg, args)
+	colorln(ANSI_RED, "[ERR] "+msg, args)
 	os.Exit(1)
 }

@@ -1,13 +1,15 @@
-package application_test
+package dic_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/deweppro/go-app/application"
-
+	ctx2 "github.com/deweppro/go-app/application/ctx"
+	"github.com/deweppro/go-app/application/dic"
 	"github.com/stretchr/testify/require"
 )
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 type t0 struct{}
 
@@ -64,26 +66,28 @@ func (t8 *t8) V() string  { return "t8V" }
 
 type hello string
 
+var a = hello("hhhh")
+
 type ii interface {
 	V() string
 }
 
-func newT7i() ii { return &t7{} }
+func newT7i(_ hello) ii {
+	return &t7{}
+}
 
 func TestUnit_Dependencies(t *testing.T) {
-	dep := application.NewDI()
-
-	a := hello("hhhh")
-	b := "gggg"
+	ctx := ctx2.New()
+	dep := dic.New()
 
 	require.NoError(t, dep.Register([]interface{}{
-		newT1, newT2, newT5, newT6, t4{}, newT7(), newT8,
-		1, "hello", true, a, b, newT7i, newT0,
+		newT1, newT2, newT5, newT6, newT7(), newT8,
+		a, newT7i, newT0,
 	}...))
 
 	require.NoError(t, dep.Build())
-	require.NoError(t, dep.Up())
-	require.Error(t, dep.Up())
+	require.NoError(t, dep.Up(ctx))
+	require.Error(t, dep.Up(ctx))
 
 	require.NoError(t, dep.Inject(func(a *t6, b ii, c hello, d *t8) {
 		require.Equal(t, "t6V", a.V())
@@ -98,8 +102,8 @@ func TestUnit_Dependencies(t *testing.T) {
 
 	}))
 
-	require.NoError(t, dep.Down())
-	require.Error(t, dep.Down())
+	require.NoError(t, dep.Down(ctx))
+	require.Error(t, dep.Down(ctx))
 }
 
 type demo1 struct{}
@@ -117,15 +121,16 @@ func (d *demo1) Down() error {
 }
 
 func TestUnit_Dependencies2(t *testing.T) {
-	dep := application.NewDI()
+	ctx := ctx2.New()
+	dep := dic.New()
 	require.NoError(t, dep.Register([]interface{}{
 		newDemo,
 	}...))
 	require.NoError(t, dep.Build())
-	require.NoError(t, dep.Up())
-	require.Error(t, dep.Up())
-	require.NoError(t, dep.Down())
-	require.Error(t, dep.Down())
+	require.NoError(t, dep.Up(ctx))
+	require.Error(t, dep.Up(ctx))
+	require.NoError(t, dep.Down(ctx))
+	require.Error(t, dep.Down(ctx))
 }
 
 type demo4 struct{}
@@ -133,11 +138,12 @@ type demo4 struct{}
 func newDemo4() (*demo4, error) { return nil, fmt.Errorf("fail init constructor demo4") }
 
 func TestUnit_Dependencies3(t *testing.T) {
-	dep := application.NewDI()
+	dep := dic.New()
 	require.NoError(t, dep.Register([]interface{}{
 		newDemo4,
 	}...))
 	err := dep.Build()
 	require.Error(t, err)
-	require.Equal(t, err.Error(), "cant initialize github.com/deweppro/go-app/application_test:*application_test.demo4: fail init constructor demo4")
+	fmt.Println(err.Error())
+	require.Contains(t, err.Error(), "initialize error <github.com/deweppro/go-app/application/dic_test.demo4>: fail init constructor demo4")
 }

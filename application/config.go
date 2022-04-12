@@ -1,13 +1,10 @@
 package application
 
-//go:generate easyjson
-
 //BaseConfig config model
-//easyjson:json
 type BaseConfig struct {
-	Env     string `yaml:"env" json:"env" toml:"env"`
-	PidFile string `yaml:"pid" json:"pid" toml:"pid"`
+	Env     string `yaml:"env"`
+	PidFile string `yaml:"pid"`
 	//logger
-	Level   uint32 `yaml:"level" json:"level" toml:"level"`
-	LogFile string `yaml:"log" json:"log" toml:"log"`
+	Level   uint32 `yaml:"level"`
+	LogFile string `yaml:"log"`
 }

@@ -3,6 +3,11 @@ package application
 import (
 	"os"
 
+	"github.com/deweppro/go-app/application/ctx"
+	"github.com/deweppro/go-app/application/dic"
+	"github.com/deweppro/go-app/application/source"
+	"github.com/deweppro/go-app/application/sys"
+	"github.com/deweppro/go-app/internal"
 	"github.com/deweppro/go-logger"
 )
 
@@ -15,11 +20,11 @@ type (
 		cfile    string
 		configs  Modules
 		modules  Modules
-		sources  Sources
-		packages *DI
+		sources  source.Sources
+		packages *dic.Dic
 		logout   *Log
 		logger   logger.Logger
-		force    *ForceClose
+		ctx      ctx.Context
 	}
 )
 
@@ -28,8 +33,8 @@ func New() *App {
 	return &App{
 		modules:  Modules{},
 		configs:  Modules{},
-		packages: NewDI(),
-		force:    newForceClose(),
+		packages: dic.New(),
+		ctx:      ctx.New(),
 	}
 }
 
@@ -56,7 +61,10 @@ func (a *App) Modules(modules ...interface{}) *App {
 //ConfigFile set config file path and configs models
 func (a *App) ConfigFile(filename string, configs ...interface{}) *App {
 	a.cfile = filename
-	a.configs = a.configs.Add(configs...)
+	for _, config := range configs {
+		a.configs = a.configs.Add(config)
+	}
+
 	return a
 }
 
@@ -65,12 +73,12 @@ func (a *App) Run() {
 	var err error
 	if len(a.cfile) > 0 {
 		// read config file
-		a.sources = Sources(a.cfile)
+		a.sources = source.Sources(a.cfile)
 
 		// init logger
 		config := &BaseConfig{}
 		if err = a.sources.Decode(config); err != nil {
-			panic(err)
+			a.logger.Fatalf(err.Error())
 		}
 		a.logout = NewLogger(config)
 		if a.logger == nil {
@@ -80,19 +88,23 @@ func (a *App) Run() {
 		a.modules = a.modules.Add(func() logger.Logger { return a.logger }, ENV(config.Env))
 
 		// decode all configs
-		if err = a.sources.Decode(a.configs...); err != nil {
-			panic(err)
+		var configs []interface{}
+		configs, err = internal.TypingPtr(a.configs, func(i interface{}) error {
+			return a.sources.Decode(i)
+		})
+		if err != nil {
+			a.logger.Fatalf(err.Error())
 		}
-		a.modules = a.modules.Add(a.configs...)
+		a.modules = a.modules.Add(configs...)
 
 		if len(config.PidFile) > 0 {
-			if err = pid2File(config.PidFile); err != nil {
-				panic(err)
+			if err = internal.PidFile(config.PidFile); err != nil {
+				a.logger.Fatalf(err.Error())
 			}
 		}
 	}
 
-	a.modules = a.modules.Add(a.force)
+	a.modules = a.modules.Add(a.ctx)
 	a.launch()
 }
 
@@ -113,18 +125,18 @@ func (a *App) launch() {
 	}
 
 	a.logger.Infof("app up dependency")
-	if err = a.packages.Up(); err != nil {
+	if err = a.packages.Up(a.ctx); err != nil {
 		a.logger.Errorf("app up dependency: %s", err.Error())
 		ex++
 	}
 
 	if err == nil {
-		go OnSyscallStop(a.force.Close)
-		<-a.force.C.Done()
+		go sys.OnSyscallStop(a.ctx.Close)
+		<-a.ctx.Done()
 	}
 
 	a.logger.Infof("app down dependency")
-	if err = a.packages.Down(); err != nil {
+	if err = a.packages.Down(a.ctx); err != nil {
 		a.logger.Errorf("app down dependency: %s", err.Error())
 		ex++
 	}

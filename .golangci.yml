@@ -40,6 +40,7 @@ linters:
   disable-all: true
   enable:
     - govet
+#    - golint
     - gofmt
     - errcheck
     - misspell

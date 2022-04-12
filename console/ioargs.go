@@ -8,12 +8,14 @@ type (
 		Key   string
 		Value string
 	}
+	//IOArgsGetter interface
 	IOArgsGetter interface {
 		Has(name string) bool
 		Get(name string) *string
 	}
 )
 
+//Has check command-line flag
 func (f ioArgs) Has(name string) bool {
 	for _, v := range f {
 		if v.Key == name {
@@ -23,6 +25,7 @@ func (f ioArgs) Has(name string) bool {
 	return false
 }
 
+//Get getter command-line flag
 func (f ioArgs) Get(name string) *string {
 	for _, v := range f {
 		if v.Key == name {

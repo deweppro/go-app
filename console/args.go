@@ -3,32 +3,39 @@ package console
 import "strings"
 
 type (
+	//ValidFunc validate argument interface
 	ValidFunc func([]string) ([]string, error)
-	Argument  struct {
+	//Argument model
+	Argument struct {
 		Count     int
 		ValidFunc ValidFunc
 	}
 )
 
+//NewArgument constructor
 func NewArgument() *Argument {
 	return &Argument{}
 }
 
 type (
+	//Args list model
 	Args struct {
 		list []Arg
 		next []string
 	}
+	//Arg model
 	Arg struct {
 		Key   string
 		Value string
 	}
+	//ArgGetter argument getter interface
 	ArgGetter interface {
 		Has(name string) bool
 		Get(name string) *string
 	}
 )
 
+//NewArgs constructor
 func NewArgs() *Args {
 	return &Args{
 		list: make([]Arg, 0),
