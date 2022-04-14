@@ -12,14 +12,19 @@ type (
 	//Simple model
 	Simple struct{}
 	//Config model
-	Config struct {
+	Config1 struct {
+		Env string `yaml:"env"`
+	}
+	Config2 struct {
 		Env string `yaml:"env"`
 	}
 )
 
 //NewSimple init Simple
-func NewSimple(_ Config) *Simple {
+func NewSimple(c1 Config1, c2 Config2) *Simple {
 	fmt.Println("--> call NewSimple")
+	fmt.Println("--> Config1.ENV=" + c1.Env)
+	fmt.Println("--> Config2.ENV=" + c2.Env)
 	return &Simple{}
 }
 
@@ -40,9 +45,10 @@ func main() {
 		Logger(logger.Default()).
 		ConfigFile(
 			"./config.yaml",
-			Config{},
+			Config1{},
 		).
 		Modules(
+			Config2{Env: "prod"},
 			NewSimple,
 		).
 		Run()

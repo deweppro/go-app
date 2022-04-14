@@ -51,24 +51,29 @@ func (v *Dic) Register(items ...interface{}) error {
 		ref := reflect.TypeOf(item)
 		switch ref.Kind() {
 
+		case reflect.Struct:
+			if err := v.list.Add(item, item, typeExist); err != nil {
+				return err
+			}
+
 		case reflect.Func:
 			for i := 0; i < ref.NumIn(); i++ {
 				in := ref.In(i)
 				if in.Kind() == reflect.Struct {
-					if err := v.list.Add(in, reflect.New(in).Elem().Interface(), stepRegister); err != nil {
+					if err := v.list.Add(in, reflect.New(in).Elem().Interface(), typeNewIfNotExist); err != nil {
 						return err
 					}
 				}
 
 			}
 			for i := 0; i < ref.NumOut(); i++ {
-				if err := v.list.Add(ref.Out(i), item, stepRegister); err != nil {
+				if err := v.list.Add(ref.Out(i), item, typeNew); err != nil {
 					return err
 				}
 			}
 
 		default:
-			if err := v.list.Add(item, item, stepRegister); err != nil {
+			if err := v.list.Add(item, item, typeExist); err != nil {
 				return err
 			}
 		}
@@ -105,7 +110,7 @@ func (v *Dic) Inject(item interface{}) error {
 
 var empty = "EMPTY"
 
-func (v *Dic) calcFunc(outAddr string, outRef reflect.Type, item interface{}) error {
+func (v *Dic) calcFunc(outAddr string, outRef reflect.Type) error {
 	if outRef.NumIn() == 0 {
 		if err := v.kahn.Add(empty, outAddr); err != nil {
 			return errors.WrapMessage(err, "cant add [->%s] to graph", outAddr)
@@ -127,13 +132,7 @@ func (v *Dic) calcFunc(outAddr string, outRef reflect.Type, item interface{}) er
 	return nil
 }
 
-func (v *Dic) calcStruct(outAddr string, outRef reflect.Type, item interface{}) error {
-	if !reflect.ValueOf(item).IsZero() {
-		if err := v.kahn.Add(empty, outAddr); err != nil {
-			return errors.WrapMessage(err, "cant add [->%s] to graph", outAddr)
-		}
-		return nil
-	}
+func (v *Dic) calcStruct(outAddr string, outRef reflect.Type) error {
 	if outRef.NumField() == 0 {
 		if err := v.kahn.Add(empty, outAddr); err != nil {
 			return errors.WrapMessage(err, "cant add [->%s] to graph", outAddr)
@@ -154,7 +153,7 @@ func (v *Dic) calcStruct(outAddr string, outRef reflect.Type, item interface{}) 
 	return nil
 }
 
-func (v *Dic) calcOther(_ string, _ reflect.Type, _ interface{}) error {
+func (v *Dic) calcOther(_ string, _ reflect.Type) error {
 	return nil
 }
 
@@ -183,9 +182,6 @@ func (v *Dic) callFunc(item interface{}) ([]reflect.Value, error) {
 }
 
 func (v *Dic) callStruct(item interface{}) ([]reflect.Value, error) {
-	if !reflect.ValueOf(item).IsZero() {
-		return []reflect.Value{reflect.ValueOf(item)}, nil
-	}
 	ref := reflect.TypeOf(item)
 	value := reflect.New(ref)
 	args := make([]reflect.Value, 0, ref.NumField())
@@ -229,6 +225,9 @@ func (v *Dic) exec() error {
 		if _, ok := names[name]; !ok {
 			continue
 		}
+		if v.list.HasType(name, typeExist) {
+			continue
+		}
 
 		item, err := v.list.Get(name)
 		if err != nil {
@@ -253,7 +252,7 @@ func (v *Dic) exec() error {
 				}
 			}
 			delete(names, addr)
-			if err = v.list.Add(arg.Type(), arg.Interface(), stepExec); err != nil {
+			if err = v.list.Add(arg.Type(), arg.Interface(), typeExist); err != nil {
 				return errors.WrapMessage(err, "initialize error <%s>", addr)
 			}
 		}
@@ -266,14 +265,15 @@ func (v *Dic) exec() error {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const (
-	stepRegister int = iota
-	stepExec
+	typeNew int = iota
+	typeNewIfNotExist
+	typeExist
 )
 
 type (
 	diElement struct {
 		Value interface{}
-		Step  int
+		Type  int
 	}
 	diData struct {
 		data map[string]*diElement
@@ -287,7 +287,7 @@ func newDiData() *diData {
 	}
 }
 
-func (v *diData) Add(place, value interface{}, step int) error {
+func (v *diData) Add(place, value interface{}, t int) error {
 	v.mux.Lock()
 	defer v.mux.Unlock()
 
@@ -304,12 +304,17 @@ func (v *diData) Add(place, value interface{}, step int) error {
 		return nil
 	}
 
-	if vv, ok := v.data[addr]; ok && vv.Step == stepExec {
-		return fmt.Errorf("dependency <%s> already initiated", addr)
+	if vv, ok := v.data[addr]; ok {
+		if t == typeNewIfNotExist {
+			return nil
+		}
+		if vv.Type == typeExist {
+			return fmt.Errorf("dependency <%s> already initiated", addr)
+		}
 	}
 	v.data[addr] = &diElement{
 		Value: value,
-		Step:  step,
+		Type:  t,
 	}
 
 	return nil
@@ -325,20 +330,44 @@ func (v *diData) Get(addr string) (interface{}, error) {
 	return nil, fmt.Errorf("dependency <%s> not initiated", addr)
 }
 
-func (v *diData) foreach(kFunc, kStruct, kOther func(addr string, ref reflect.Type, item interface{}) error) error {
+func (v *diData) HasType(addr string, t int) bool {
+	v.mux.RLock()
+	defer v.mux.RUnlock()
+
+	if vv, ok := v.data[addr]; ok {
+		return vv.Type == t
+	}
+	return false
+}
+
+func (v *diData) Step(addr string) (int, error) {
+	v.mux.RLock()
+	defer v.mux.RUnlock()
+
+	if vv, ok := v.data[addr]; ok {
+		return vv.Type, nil
+	}
+	return 0, fmt.Errorf("dependency <%s> not initiated", addr)
+}
+
+func (v *diData) foreach(kFunc, kStruct, kOther func(addr string, ref reflect.Type) error) error {
 	v.mux.RLock()
 	defer v.mux.RUnlock()
 
 	for addr, item := range v.data {
+		if item.Type == typeExist {
+			continue
+		}
+
 		ref := reflect.TypeOf(item.Value)
 		var err error
 		switch ref.Kind() {
 		case reflect.Func:
-			err = kFunc(addr, ref, item)
+			err = kFunc(addr, ref)
 		case reflect.Struct:
-			err = kStruct(addr, ref, item)
+			err = kStruct(addr, ref)
 		default:
-			err = kOther(addr, ref, item)
+			err = kOther(addr, ref)
 		}
 
 		if err != nil {

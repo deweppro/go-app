@@ -7,6 +7,7 @@ import (
 	"github.com/deweppro/go-app/application/dic"
 	"github.com/deweppro/go-app/application/source"
 	"github.com/deweppro/go-app/application/sys"
+	"github.com/deweppro/go-app/console"
 	"github.com/deweppro/go-app/internal"
 	"github.com/deweppro/go-logger"
 )
@@ -78,7 +79,7 @@ func (a *App) Run() {
 		// init logger
 		config := &BaseConfig{}
 		if err = a.sources.Decode(config); err != nil {
-			a.logger.Fatalf(err.Error())
+			console.FatalIfErr(err, "decode config file: %s", a.cfile)
 		}
 		a.logout = NewLogger(config)
 		if a.logger == nil {
@@ -93,13 +94,18 @@ func (a *App) Run() {
 			return a.sources.Decode(i)
 		})
 		if err != nil {
-			a.logger.Fatalf(err.Error())
+			a.logger.WithFields(logger.Fields{
+				"err": err.Error(),
+			}).Fatalf("decode config file")
 		}
 		a.modules = a.modules.Add(configs...)
 
 		if len(config.PidFile) > 0 {
 			if err = internal.PidFile(config.PidFile); err != nil {
-				a.logger.Fatalf(err.Error())
+				a.logger.WithFields(logger.Fields{
+					"err":  err.Error(),
+					"file": config.PidFile,
+				}).Fatalf("create pid file")
 			}
 		}
 	}
@@ -116,17 +122,23 @@ func (a *App) launch() {
 
 	a.logger.Infof("app register components")
 	if err = a.packages.Register(a.modules...); err != nil {
-		a.logger.Fatalf("app register components: %s", err.Error())
+		a.logger.WithFields(logger.Fields{
+			"err": err.Error(),
+		}).Fatalf("app register components")
 	}
 
 	a.logger.Infof("app build dependency")
 	if err = a.packages.Build(); err != nil {
-		a.logger.Fatalf("app build dependency: %s", err.Error())
+		a.logger.WithFields(logger.Fields{
+			"err": err.Error(),
+		}).Fatalf("app build dependency")
 	}
 
 	a.logger.Infof("app up dependency")
 	if err = a.packages.Up(a.ctx); err != nil {
-		a.logger.Errorf("app up dependency: %s", err.Error())
+		a.logger.WithFields(logger.Fields{
+			"err": err.Error(),
+		}).Errorf("app up dependency")
 		ex++
 	}
 
@@ -137,12 +149,14 @@ func (a *App) launch() {
 
 	a.logger.Infof("app down dependency")
 	if err = a.packages.Down(a.ctx); err != nil {
-		a.logger.Errorf("app down dependency: %s", err.Error())
+		a.logger.WithFields(logger.Fields{
+			"err": err.Error(),
+		}).Errorf("app down dependency")
 		ex++
 	}
 
 	if err = a.logout.Close(); err != nil {
-		panic(err)
+		console.FatalIfErr(err, "close log file")
 	}
 
 	if ex > 0 {
