@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/deweppro/go-app/application"
-
 	"github.com/stretchr/testify/require"
 )
 

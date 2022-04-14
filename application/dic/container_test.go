@@ -38,10 +38,15 @@ func (t2 *t2) Down() error                 { return nil }
 func (t2 *t2) V() (string, string, string) { return "t2V", t2.t1.V(), t2.t0.V() }
 
 type t4 struct {
-	T0 *t0
-	T1 *t1
-	T2 *t2
-	T7 *t7
+	T0  *t0
+	T1  *t1
+	T2  *t2
+	T7  *t7
+	T44 t44
+}
+
+type t44 struct {
+	Env string
 }
 
 type t5 struct{}
@@ -82,7 +87,7 @@ func TestUnit_Dependencies(t *testing.T) {
 
 	require.NoError(t, dep.Register([]interface{}{
 		newT1, newT2, newT5, newT6, newT7(), newT8,
-		a, newT7i, newT0,
+		a, newT7i, newT0, t44{Env: "aaa"},
 	}...))
 
 	require.NoError(t, dep.Build())
