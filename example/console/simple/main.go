@@ -18,12 +18,12 @@ func main() {
 			f.StringVar("a", "demo", "this is a string argument")
 			f.IntVar("b", 1, "this is a int64 argument")
 			f.FloatVar("cc", 1e-5, "this is a float64 argument")
-			f.Bool("d", "this is a bool argument")
+			f.Bool("e", "this is a bool argument")
 		})
 
 		setter.Argument(1, func(s []string) ([]string, error) {
 			if !strings.Contains(s[0], "/") {
-				return nil, fmt.Errorf("argument must contain /")
+				return nil, fmt.Errorf("argument must contain `/`")
 			}
 			return strings.Split(s[0], "/"), nil
 		})

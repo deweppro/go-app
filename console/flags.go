@@ -16,14 +16,14 @@ type (
 		name  string
 		value interface{}
 		usage string
-		call  func(getter IOArgsGetter) (interface{}, error)
+		call  func(getter ArgGetter) (interface{}, error)
 	}
 )
 
 //FlagsGetter getter interface
 type FlagsGetter interface {
 	Info(cb func(bool, string, interface{}, string))
-	Call(g IOArgsGetter, cb func(interface{})) error
+	Call(g ArgGetter, cb func(interface{})) error
 }
 
 //FlagsSetter setter interface
@@ -56,7 +56,7 @@ func (f *Flags) Info(cb func(req bool, name string, v interface{}, usage string)
 	}
 }
 
-func (f *Flags) Call(g IOArgsGetter, cb func(interface{})) error {
+func (f *Flags) Call(g ArgGetter, cb func(interface{})) error {
 	for _, item := range f.d {
 		v, err := item.call(g)
 		if err != nil {
@@ -74,7 +74,7 @@ func (f *Flags) StringVar(name string, value string, usage string) {
 		name:  name,
 		value: value,
 		usage: usage,
-		call: func(getter IOArgsGetter) (interface{}, error) {
+		call: func(getter ArgGetter) (interface{}, error) {
 			if val := getter.Get(name); val != nil {
 				return *val, nil
 			}
@@ -89,7 +89,7 @@ func (f *Flags) String(name string, usage string) {
 		req:   true,
 		name:  name,
 		usage: usage,
-		call: func(getter IOArgsGetter) (interface{}, error) {
+		call: func(getter ArgGetter) (interface{}, error) {
 			if val := getter.Get(name); val != nil && len(*val) > 0 {
 				return *val, nil
 			}
@@ -105,7 +105,7 @@ func (f *Flags) IntVar(name string, value int64, usage string) {
 		value: value,
 		name:  name,
 		usage: usage,
-		call: func(getter IOArgsGetter) (interface{}, error) {
+		call: func(getter ArgGetter) (interface{}, error) {
 			if val := getter.Get(name); val != nil && len(*val) > 0 {
 				return strconv.ParseInt(*val, 10, 64)
 			}
@@ -121,7 +121,7 @@ func (f *Flags) Int(name string, usage string) {
 		value: 0,
 		name:  name,
 		usage: usage,
-		call: func(getter IOArgsGetter) (interface{}, error) {
+		call: func(getter ArgGetter) (interface{}, error) {
 			if val := getter.Get(name); val != nil && len(*val) > 0 {
 				return strconv.ParseInt(*val, 10, 64)
 			}
@@ -137,7 +137,7 @@ func (f *Flags) FloatVar(name string, value float64, usage string) {
 		value: value,
 		name:  name,
 		usage: usage,
-		call: func(getter IOArgsGetter) (interface{}, error) {
+		call: func(getter ArgGetter) (interface{}, error) {
 			if val := getter.Get(name); val != nil && len(*val) > 0 {
 				return strconv.ParseFloat(*val, 64)
 			}
@@ -153,7 +153,7 @@ func (f *Flags) Float(name string, usage string) {
 		value: 0.0,
 		name:  name,
 		usage: usage,
-		call: func(getter IOArgsGetter) (interface{}, error) {
+		call: func(getter ArgGetter) (interface{}, error) {
 			if val := getter.Get(name); val != nil && len(*val) > 0 {
 				return strconv.ParseFloat(*val, 64)
 			}
@@ -169,7 +169,7 @@ func (f *Flags) Bool(name string, usage string) {
 		value: true,
 		name:  name,
 		usage: usage,
-		call: func(getter IOArgsGetter) (interface{}, error) {
+		call: func(getter ArgGetter) (interface{}, error) {
 			if val := getter.Get(name); val != nil {
 				return true, nil
 			}

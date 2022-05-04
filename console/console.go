@@ -110,13 +110,16 @@ func (c *Console) run(command CommandGetter, a []string, args *Args) {
 
 	if command.ArgCount() > 0 {
 		if len(a) < command.ArgCount() {
-			Fatalf("command \"%s\" arguments must be - %d", command.ArgCount())
+			Fatalf("command \"%s\" arguments must be - %d", command.Name(), command.ArgCount())
 		}
-		if val, err := command.ArgCall(a[:command.ArgCount()]); err != nil {
+		val, err := command.ArgCall(a[:command.ArgCount()])
+		if err != nil {
 			Fatalf("command \"%s\" validate arguments: %s", command.Name(), err.Error())
-		} else {
-			rv = append(rv, reflect.ValueOf(val))
 		}
+		if len(a) > command.ArgCount() {
+			val = append(val, a[command.ArgCount():]...)
+		}
+		rv = append(rv, reflect.ValueOf(val))
 	} else {
 		rv = append(rv, reflect.ValueOf([]string{}))
 	}
