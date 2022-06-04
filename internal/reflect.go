@@ -20,6 +20,8 @@ func GetAddr(t reflect.Type) (string, bool) {
 		if len(t.Elem().PkgPath()) > 0 {
 			return t.Elem().PkgPath() + "." + t.Elem().Name(), true
 		}
+	case reflect.Func:
+		return RandString(30) + "." + t.String(), true
 	}
 	return t.String(), false
 }

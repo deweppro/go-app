@@ -72,6 +72,14 @@ func (a *App) ConfigFile(filename string, configs ...interface{}) *App {
 //Run run application
 func (a *App) Run() {
 	var err error
+	if len(a.cfile) == 0 {
+		a.logout = NewLogger(&BaseConfig{
+			Level:   4,
+			LogFile: "/dev/stdout",
+		})
+		a.logger = logger.Default()
+		a.logout.Handler(a.logger)
+	}
 	if len(a.cfile) > 0 {
 		// read config file
 		a.sources = source.Sources(a.cfile)

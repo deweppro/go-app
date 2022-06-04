@@ -87,7 +87,7 @@ func (s *Tree) Up(ctx ctx.Context) error {
 		return e.ErrDepRunning
 	}
 	if s.sequence == nil {
-		return e.ErrDepEmpty
+		return nil
 	}
 	for s.sequence.Previous != nil {
 		s.sequence = s.sequence.Previous
@@ -119,7 +119,7 @@ func (s *Tree) Down(ctx ctx.Context) (er error) {
 		return e.ErrDepNotRunning
 	}
 	if s.sequence == nil {
-		return e.ErrDepEmpty
+		return nil
 	}
 	for {
 		if vv, ok := s.sequence.Current.(IService); ok {

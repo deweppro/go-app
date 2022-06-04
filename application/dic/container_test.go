@@ -71,7 +71,7 @@ func (t8 *t8) V() string  { return "t8V" }
 
 type hello string
 
-var a = hello("hhhh")
+var AA = hello("hhhh")
 
 type ii interface {
 	V() string
@@ -87,20 +87,32 @@ func TestUnit_Dependencies(t *testing.T) {
 
 	require.NoError(t, dep.Register([]interface{}{
 		newT1, newT2, newT5, newT6, newT7(), newT8,
-		a, newT7i, newT0, t44{Env: "aaa"},
+		AA, newT7i, newT0, t44{Env: "aaa"},
+		func(b *t6) {
+			t.Log("anonymous function")
+		},
 	}...))
 
 	require.NoError(t, dep.Build())
 	require.NoError(t, dep.Up(ctx))
 	require.Error(t, dep.Up(ctx))
 
-	require.NoError(t, dep.Inject(func(a *t6, b ii, c hello, d *t8) {
-		require.Equal(t, "t6V", a.V())
-		require.Equal(t, "t0V", a.T4.T0.V())
-		require.Equal(t, "t1V", a.T4.T1.V())
-		require.Equal(t, "t7V", b.V())
-		require.Equal(t, "t8V", d.V())
-		require.Equal(t, hello("hhhh"), c)
+	require.NoError(t, dep.Inject(func(
+		v1 *t1, v2 *t2, v3 *t5, v4 *t6, v5 *t6,
+		v6 *t7, v7 *t8, v8 hello,
+		v9 ii, v10 *t0, v11 t44,
+	) {
+		require.Equal(t, "t1V", v1.V())
+		vv2, _, _ := v2.V()
+		require.Equal(t, "t2V", vv2)
+		require.Equal(t, "t5V", v3.V())
+		require.Equal(t, "t6V", v4.V())
+		require.Equal(t, "t6V", v5.V())
+		require.Equal(t, "t7V", v6.V())
+		require.Equal(t, hello("hhhh"), v8)
+		require.Equal(t, "t7V", v9.V())
+		require.Equal(t, "t0V", v10.V())
+		require.Equal(t, "aaa", v11.Env)
 	}))
 
 	require.Error(t, dep.Inject(func(a string, b int, c bool) {

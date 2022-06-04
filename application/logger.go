@@ -31,6 +31,8 @@ func (l *Log) Handler(log logger.Logger) {
 
 //Close log file
 func (l *Log) Close() error {
-	l.handler.Close()
+	if l.handler != nil {
+		l.handler.Close()
+	}
 	return l.file.Close()
 }

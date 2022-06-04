@@ -66,6 +66,12 @@ func (v *Dic) Register(items ...interface{}) error {
 				}
 
 			}
+			if ref.NumOut() == 0 {
+				if err := v.list.Add(ref, item, typeNew); err != nil {
+					return err
+				}
+				continue
+			}
 			for i := 0; i < ref.NumOut(); i++ {
 				if err := v.list.Add(ref.Out(i), item, typeNew); err != nil {
 					return err
