@@ -123,52 +123,73 @@ func (a *App) Run() {
 }
 
 func (a *App) launch() {
-	var (
-		err error
-		ex  = 0
+	result := a.steps(
+		[]step{
+			{
+				Message: "app register components",
+				Call:    func() error { return a.packages.Register(a.modules...) },
+			},
+			{
+				Message: "app build dependency",
+				Call:    func() error { return a.packages.Build() },
+			},
+			{
+				Message: "app up dependency",
+				Call:    func() error { return a.packages.Up(a.ctx) },
+			},
+		},
+		func(er bool) {
+			if er {
+				a.ctx.Close()
+				return
+			}
+			go sys.OnSyscallStop(a.ctx.Close)
+			<-a.ctx.Done()
+		},
+		[]step{
+			{
+				Message: "app down dependency",
+				Call:    func() error { return a.packages.Down(a.ctx) },
+			},
+		},
 	)
-
-	a.logger.Infof("app register components")
-	if err = a.packages.Register(a.modules...); err != nil {
-		a.logger.WithFields(logger.Fields{
-			"err": err.Error(),
-		}).Fatalf("app register components")
-	}
-
-	a.logger.Infof("app build dependency")
-	if err = a.packages.Build(); err != nil {
-		a.logger.WithFields(logger.Fields{
-			"err": err.Error(),
-		}).Fatalf("app build dependency")
-	}
-
-	a.logger.Infof("app up dependency")
-	if err = a.packages.Up(a.ctx); err != nil {
-		a.logger.WithFields(logger.Fields{
-			"err": err.Error(),
-		}).Errorf("app up dependency")
-		ex++
-	}
-
-	if err == nil {
-		go sys.OnSyscallStop(a.ctx.Close)
-		<-a.ctx.Done()
-	}
-
-	a.logger.Infof("app down dependency")
-	if err = a.packages.Down(a.ctx); err != nil {
-		a.logger.WithFields(logger.Fields{
-			"err": err.Error(),
-		}).Errorf("app down dependency")
-		ex++
-	}
-
-	if err = a.logout.Close(); err != nil {
-		console.FatalIfErr(err, "close log file")
-	}
-
-	if ex > 0 {
+	console.FatalIfErr(a.logout.Close(), "close log file")
+	if result {
 		os.Exit(1)
 	}
 	os.Exit(0)
+}
+
+type step struct {
+	Call    func() error
+	Message string
+}
+
+func (a *App) steps(up []step, wait func(bool), down []step) bool {
+	var erc int
+
+	for _, s := range up {
+		a.logger.Infof(s.Message)
+		if err := s.Call(); err != nil {
+			a.logger.WithFields(logger.Fields{
+				"err": err.Error(),
+			}).Errorf(s.Message)
+			erc++
+			break
+		}
+	}
+
+	wait(erc > 0)
+
+	for _, s := range down {
+		a.logger.Infof(s.Message)
+		if err := s.Call(); err != nil {
+			a.logger.WithFields(logger.Fields{
+				"err": err.Error(),
+			}).Errorf(s.Message)
+			erc++
+		}
+	}
+
+	return erc > 0
 }
