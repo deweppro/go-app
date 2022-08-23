@@ -1,7 +1,6 @@
 package console
 
 import (
-	"fmt"
 	"os"
 	"reflect"
 )
@@ -11,14 +10,14 @@ const helpArg = "help"
 type Console struct {
 	name        string
 	description string
-	next        []CommandGetter
+	root        CommandGetter
 }
 
 func New(name, description string) *Console {
 	return &Console{
 		name:        name,
 		description: description,
-		next:        make([]CommandGetter, 0),
+		root:        NewCommand(func(_ CommandSetter) {}).AsRoot(),
 	}
 }
 
@@ -30,101 +29,80 @@ func (c *Console) recover() {
 
 func (c *Console) AddCommand(getter ...CommandGetter) {
 	defer c.recover()
-	for _, v := range getter {
-		if err := v.Validate(); err != nil {
-			Fatalf(err.Error())
-		}
-		c.next = append(c.next, v)
+
+	c.root.AddCommand(getter...)
+}
+
+func (c *Console) RootCommand(getter CommandGetter) {
+	defer c.recover()
+
+	next := c.root.List()
+	c.root = getter.AsRoot()
+	if err := c.root.Validate(); err != nil {
+		Fatalf(err.Error())
 	}
+	c.root.AddCommand(next...)
 }
 
 func (c *Console) Exec() {
-	//defer c.recover()
-	if err := c.validate(); err != nil {
-		Fatalf(err.Error())
-	}
+	defer c.recover()
 
 	args := NewArgs().Parse(os.Args[1:])
-	next, cmd, cur, h := c.build(args)
+	cmd, cur, h := c.build(args)
 	if h {
-		help(c.name, c.description, next, cmd, cur)
+		help(c.name, c.description, cmd, cur)
 		return
 	}
 	c.run(cmd, args.Next()[len(cur):], args)
 }
 
-func (c *Console) validate() error {
-	if len(c.name) == 0 {
-		return fmt.Errorf("command name is empty")
-	}
-	return nil
-}
-
-func (c *Console) build(args *Args) (next []CommandGetter, command CommandGetter, cur []string, help bool) {
+func (c *Console) build(args *Args) (command CommandGetter, cur []string, help bool) {
 	var (
 		i   int
 		cmd string
 	)
-	next = c.next
 	for i, cmd = range args.Next() {
-		for _, command = range next {
-			if !command.Is(cmd) {
+		if i == 0 {
+			if nc := c.root.Next(cmd); nc != nil {
+				command = nc
 				continue
 			}
-			next = command.Next()
-			if len(next) > 0 {
-				goto NEXT
-			}
-			goto END
-		}
-
-		if args.Has(helpArg) {
-			cur, help = args.Next()[:i], true
-			return
+			command = c.root
+			break
 		} else {
-			Fatalf("command not found")
+			if nc := command.Next(cmd); nc != nil {
+				command = nc
+				continue
+			}
+			break
 		}
-
-	NEXT:
-		continue
-	END:
-		break
 	}
 
 	if len(args.Next()) > 0 {
-		cur = args.Next()[:i+1]
-	}
-	if args.Has(helpArg) {
-		help = true
-		return
+		cur = args.Next()[:i]
 	}
 
-	if command == nil {
-		Fatalf("command not found")
+	if args.Has(helpArg) {
+		help = true
 	}
+
 	return
 }
 
 func (c *Console) run(command CommandGetter, a []string, args *Args) {
 	rv := make([]reflect.Value, 0)
 
-	if command.ArgCount() > 0 {
-		if len(a) < command.ArgCount() {
-			Fatalf("command \"%s\" arguments must be - %d", command.Name(), command.ArgCount())
-		}
-		val, err := command.ArgCall(a[:command.ArgCount()])
-		if err != nil {
-			Fatalf("command \"%s\" validate arguments: %s", command.Name(), err.Error())
-		}
-		if len(a) > command.ArgCount() {
-			val = append(val, a[command.ArgCount():]...)
-		}
-		rv = append(rv, reflect.ValueOf(val))
-	} else {
-		rv = append(rv, reflect.ValueOf([]string{}))
+	if command == nil || command.Call() == nil {
+		Fatalf("command not found")
 	}
 
-	err := command.Flags().Call(args, func(i interface{}) {
+	val, err := command.ArgCall(a)
+	if err != nil {
+		Fatalf("command \"%s\" validate arguments: %s", command.Name(), err.Error())
+	}
+	rv = append(rv, reflect.ValueOf(val))
+
+	err = command.Flags().Call(args, func(i interface{}) {
 		rv = append(rv, reflect.ValueOf(i))
 	})
 	if err != nil {

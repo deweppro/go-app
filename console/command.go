@@ -6,6 +6,7 @@ import (
 )
 
 type Command struct {
+	root     bool
 	name     string
 	desc     string
 	examples []string
@@ -17,24 +18,26 @@ type Command struct {
 }
 
 type CommandGetter interface {
-	Next() []CommandGetter
+	Next(string) CommandGetter
+	List() []CommandGetter
 	Validate() error
 	Is(string) bool
 	Name() string
 	Description() string
 	Examples() []string
-	ArgCount() int
 	ArgCall(d []string) ([]string, error)
 	Flags() FlagsGetter
 	Call() interface{}
 	AddCommand(...CommandGetter)
+	AsRoot() CommandGetter
+	IsRoot() bool
 }
 
 type CommandSetter interface {
 	Setup(string, string)
 	Example(string)
 	Flag(cb func(FlagsSetter))
-	Argument(count int, call ValidFunc)
+	ArgumentFunc(call ValidFunc)
 	ExecFunc(interface{})
 	AddCommand(...CommandGetter)
 }
@@ -52,6 +55,16 @@ func NewCommand(cb func(CommandSetter)) CommandGetter {
 
 func (c *Command) Setup(name, description string) {
 	c.name, c.desc = name, description
+}
+
+func (c *Command) AsRoot() CommandGetter {
+	c.root = true
+	c.name = ""
+	return c
+}
+
+func (c *Command) IsRoot() bool {
+	return c.root
 }
 
 func (c *Command) Name() string {
@@ -78,12 +91,8 @@ func (c *Command) Flags() FlagsGetter {
 	return c.flags
 }
 
-func (c *Command) Argument(count int, call ValidFunc) {
-	c.args.Count, c.args.ValidFunc = count, call
-}
-
-func (c *Command) ArgCount() int {
-	return c.args.Count
+func (c *Command) ArgumentFunc(call ValidFunc) {
+	c.args.ValidFunc = call
 }
 
 func (c *Command) ArgCall(d []string) ([]string, error) {
@@ -97,24 +106,29 @@ func (c *Command) ExecFunc(i interface{}) {
 	c.execute = i
 }
 
-func (c *Command) Next() []CommandGetter {
+func (c *Command) Next(cmd string) CommandGetter {
+	for _, getter := range c.next {
+		if getter.Is(cmd) {
+			return getter
+		}
+	}
+	return nil
+}
+
+func (c *Command) List() []CommandGetter {
 	return c.next
 }
 
 func (c *Command) Validate() error {
-	if len(c.name) == 0 {
+	if len(c.name) == 0 && !c.IsRoot() {
 		return fmt.Errorf("command name is empty. use Setup(name, description)")
 	}
-	if len(c.next) > 0 {
-		c.execute = nil
-		return nil
-	}
 	if reflect.ValueOf(c.execute).Kind() != reflect.Func {
-		return fmt.Errorf("command %s: ExecFunc is not a func", c.name)
+		return fmt.Errorf("command [%s] ExecFunc: is not a func", c.name)
 	}
 	count := c.flags.Count() + 1
 	if reflect.ValueOf(c.execute).Type().NumIn() != count {
-		return fmt.Errorf("command \"%s\" Flags: fewer arguments declared than expected in ExecFunc", c.name)
+		return fmt.Errorf("command [%s] Flags: fewer arguments declared than expected in ExecFunc", c.name)
 	}
 	return nil
 }

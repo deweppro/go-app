@@ -7,7 +7,6 @@ type (
 	ValidFunc func([]string) ([]string, error)
 	//Argument model
 	Argument struct {
-		Count     int
 		ValidFunc ValidFunc
 	}
 )

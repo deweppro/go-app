@@ -8,6 +8,8 @@ import "github.com/deweppro/go-app/console"
 // creating an instance of the application, 
 // specifying its name and description for flag: --help 
 root := console.New("tool", "help tool")
+// adding root command
+root.RootCommand(...)
 // adding one or more commands
 root.AddCommand(...)
 // launching the app
@@ -35,7 +37,7 @@ console.NewCommand(func(setter console.CommandSetter) {
     // argument validation: specifies the number of arguments, 
     // and validation function that should return 
     // value after validation and validation error
-    setter.Argument(1, func(s []string) ([]string, error) {
+    setter.ArgumentFunc(func(s []string) ([]string, error) {
         if !strings.Contains(s[0], "/") {
             return nil, fmt.Errorf("argument must contain /")
         }
@@ -156,7 +158,7 @@ Flags:
   -a     this is a string argument (default: demo)
   -b     this is a int64 argument (default: 1)
   --cc    this is a float64 argument (default: 1e-05)
-  -d     this is a bool argument (default: true)
+  -d     this is a bool argument (default: false)
 
 
 Examples:
