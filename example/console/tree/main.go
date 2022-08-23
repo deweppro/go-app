@@ -21,7 +21,7 @@ func main() {
 			f.Bool("e", "this is a bool argument")
 		})
 
-		setter.Argument(1, func(s []string) ([]string, error) {
+		setter.ArgumentFunc(func(s []string) ([]string, error) {
 			if !strings.Contains(s[0], "/") {
 				return nil, fmt.Errorf("argument must contain /")
 			}

@@ -8,27 +8,28 @@ import (
 	"text/template"
 )
 
-var helpTemplate = `{{if len .Description | ne 0}}{{.Description}}
-
-{{end}}Usage: {{if .ShowCommand}}
+var helpTemplate = `{{if len .Description | ne 0}}{{.Description}}{{end}}
+{{if .ShowCommand}}
+Current Command: 
   {{.Name}} {{.Curr}} {{.Args}} {{range $ex := .FlagsEx}} {{$ex}}{{end}}
 
 Flags:
 {{range $ex := .Flags}}  {{$ex}}
 {{end}}
-
 Examples:
 {{range $ex := .Examples}}  {{$ex}}
 {{end}}
-{{else}}
+_____________________________________________________{{end}}
+{{if len .Next | ne 0}}
+Usage: 
   {{.Name}} {{.Curr}} [command] [args]
 
 Available Commands:
 {{range $ex := .Next}}  {{$ex}}
-{{end}}
+{{end}}{{end}}
 _____________________________________________________
 Use flag --help for more information about a command.
-{{end}}
+
 `
 
 type helpModel struct {
@@ -45,15 +46,19 @@ type helpModel struct {
 	Next []string
 }
 
-func help(tool string, desc string, next []CommandGetter, command CommandGetter, cur []string) {
+func help(tool string, desc string, c CommandGetter, args []string) {
 	model := &helpModel{
-		ShowCommand: len(next) == 0,
+		ShowCommand: c != nil && c.Call() != nil,
 		Name:        tool,
 		Description: desc,
 
-		Curr: strings.Join(cur, " "),
+		Curr: strings.Join(args, " "),
 		Next: func() (out []string) {
+			if c == nil {
+				return
+			}
 			var max int
+			next := c.List()
 			for _, v := range next {
 				if max < len(v.Name()) {
 					max = len(v.Name())
@@ -65,26 +70,27 @@ func help(tool string, desc string, next []CommandGetter, command CommandGetter,
 			for _, v := range next {
 				out = append(out, v.Name()+strings.Repeat(" ", max-len(v.Name()))+"    "+v.Description())
 			}
+
 			return
 		}(),
 	}
 
-	if command != nil {
+	if c != nil {
 		model.Examples = func() (out []string) {
-			for _, v := range command.Examples() {
+			for _, v := range c.Examples() {
 				out = append(out, tool+" "+v)
 			}
 			return
 		}()
-		model.Args = strings.TrimSpace(strings.Repeat("[arg] ", command.ArgCount()))
+		model.Args = "[arg]"
 		model.Flags = func() (out []string) {
 			max := 0
-			command.Flags().Info(func(r bool, n string, v interface{}, u string) {
+			c.Flags().Info(func(r bool, n string, v interface{}, u string) {
 				if len(n) > max {
 					max = len(n)
 				}
 			})
-			command.Flags().Info(func(r bool, n string, v interface{}, u string) {
+			c.Flags().Info(func(r bool, n string, v interface{}, u string) {
 				ex, i := "", 1
 				if !r {
 					ex = fmt.Sprintf("(default: %+v)", v)
@@ -99,7 +105,7 @@ func help(tool string, desc string, next []CommandGetter, command CommandGetter,
 			return
 		}()
 		model.FlagsEx = func() (out []string) {
-			command.Flags().Info(func(r bool, n string, v interface{}, u string) {
+			c.Flags().Info(func(r bool, n string, v interface{}, u string) {
 				i, ex := 1, ""
 				if len(n) > 1 {
 					i = 2

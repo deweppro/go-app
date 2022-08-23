@@ -166,7 +166,7 @@ func (f *Flags) Float(name string, usage string) {
 func (f *Flags) Bool(name string, usage string) {
 	f.d = append(f.d, FlagItem{
 		req:   false,
-		value: true,
+		value: false,
 		name:  name,
 		usage: usage,
 		call: func(getter ArgGetter) (interface{}, error) {
