@@ -80,6 +80,8 @@ func (c *Console) build(args *Args) (command CommandGetter, cur []string, help b
 
 	if len(args.Next()) > 0 {
 		cur = args.Next()[:i]
+	} else {
+		command = c.root
 	}
 
 	if args.Has(helpArg) {
