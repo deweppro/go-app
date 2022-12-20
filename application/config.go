@@ -1,6 +1,6 @@
 package application
 
-//BaseConfig config model
+// BaseConfig config model
 type BaseConfig struct {
 	Env     string `yaml:"env"`
 	PidFile string `yaml:"pid"`

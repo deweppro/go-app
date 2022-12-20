@@ -1,9 +1,9 @@
 package application
 
-//Modules DI container
+// Modules DI container
 type Modules []interface{}
 
-//Add object to container
+// Add object to container
 func (m Modules) Add(v ...interface{}) Modules {
 	for _, mod := range v {
 		switch v := mod.(type) {

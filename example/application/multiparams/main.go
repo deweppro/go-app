@@ -7,7 +7,7 @@ import (
 	"github.com/deweppro/go-logger"
 )
 
-//nolint: golint
+// nolint: golint
 type (
 	Test0 struct{}
 	Test1 struct{}

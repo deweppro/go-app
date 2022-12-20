@@ -9,10 +9,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-//Sources model
+// Sources model
 type Sources string
 
-//Decode unmarshal file to model
+// Decode unmarshal file to model
 func (s Sources) Decode(configs ...interface{}) error {
 	data, err := ioutil.ReadFile(string(s))
 	if err != nil {

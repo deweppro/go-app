@@ -20,13 +20,13 @@ type (
 	}
 )
 
-//FlagsGetter getter interface
+// FlagsGetter getter interface
 type FlagsGetter interface {
 	Info(cb func(bool, string, interface{}, string))
 	Call(g ArgGetter, cb func(interface{})) error
 }
 
-//FlagsSetter setter interface
+// FlagsSetter setter interface
 type FlagsSetter interface {
 	StringVar(name string, value string, usage string)
 	String(name string, usage string)
@@ -37,19 +37,19 @@ type FlagsSetter interface {
 	Bool(name string, usage string)
 }
 
-//NewFlags init new flag
+// NewFlags init new flag
 func NewFlags() *Flags {
 	return &Flags{
 		d: make([]FlagItem, 0),
 	}
 }
 
-//Count of flags
+// Count of flags
 func (f *Flags) Count() int {
 	return len(f.d)
 }
 
-//Info about command
+// Info about command
 func (f *Flags) Info(cb func(req bool, name string, v interface{}, usage string)) {
 	for _, item := range f.d {
 		cb(item.req, item.name, item.value, item.usage)
@@ -67,7 +67,7 @@ func (f *Flags) Call(g ArgGetter, cb func(interface{})) error {
 	return nil
 }
 
-//StringVar flag decoder with default value
+// StringVar flag decoder with default value
 func (f *Flags) StringVar(name string, value string, usage string) {
 	f.d = append(f.d, FlagItem{
 		req:   false,
@@ -83,7 +83,7 @@ func (f *Flags) StringVar(name string, value string, usage string) {
 	})
 }
 
-//String flag decoder
+// String flag decoder
 func (f *Flags) String(name string, usage string) {
 	f.d = append(f.d, FlagItem{
 		req:   true,
@@ -98,7 +98,7 @@ func (f *Flags) String(name string, usage string) {
 	})
 }
 
-//IntVar flag decoder with default value
+// IntVar flag decoder with default value
 func (f *Flags) IntVar(name string, value int64, usage string) {
 	f.d = append(f.d, FlagItem{
 		req:   false,
@@ -114,7 +114,7 @@ func (f *Flags) IntVar(name string, value int64, usage string) {
 	})
 }
 
-//Int flag decoder
+// Int flag decoder
 func (f *Flags) Int(name string, usage string) {
 	f.d = append(f.d, FlagItem{
 		req:   true,
@@ -130,7 +130,7 @@ func (f *Flags) Int(name string, usage string) {
 	})
 }
 
-//FloatVar flag decoder with default value
+// FloatVar flag decoder with default value
 func (f *Flags) FloatVar(name string, value float64, usage string) {
 	f.d = append(f.d, FlagItem{
 		req:   false,
@@ -146,7 +146,7 @@ func (f *Flags) FloatVar(name string, value float64, usage string) {
 	})
 }
 
-//Float flag decoder
+// Float flag decoder
 func (f *Flags) Float(name string, usage string) {
 	f.d = append(f.d, FlagItem{
 		req:   true,
@@ -162,7 +162,7 @@ func (f *Flags) Float(name string, usage string) {
 	})
 }
 
-//Bool flag decoder
+// Bool flag decoder
 func (f *Flags) Bool(name string, usage string) {
 	f.d = append(f.d, FlagItem{
 		req:   false,

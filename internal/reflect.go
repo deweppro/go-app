@@ -7,7 +7,7 @@ import (
 
 var errType = reflect.TypeOf(new(error)).Elem()
 
-//GetAddr getting object address
+// GetAddr getting object address
 func GetAddr(t reflect.Type) (string, bool) {
 	if len(t.PkgPath()) > 0 {
 		return t.PkgPath() + "." + t.Name(), true
@@ -26,7 +26,7 @@ func GetAddr(t reflect.Type) (string, bool) {
 	return t.String(), false
 }
 
-//TypingPtr structure transformations
+// TypingPtr structure transformations
 func TypingPtr(vv []interface{}, call func(interface{}) error) ([]interface{}, error) {
 	result := make([]interface{}, 0, len(vv))
 	for _, v := range vv {

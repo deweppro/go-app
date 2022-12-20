@@ -29,7 +29,7 @@ type (
 	}
 )
 
-//New create application
+// New create application
 func New() *App {
 	return &App{
 		modules:  Modules{},
@@ -39,13 +39,13 @@ func New() *App {
 	}
 }
 
-//Logger setup logger
+// Logger setup logger
 func (a *App) Logger(log logger.Logger) *App {
 	a.logger = log
 	return a
 }
 
-//Modules append object to modules list
+// Modules append object to modules list
 func (a *App) Modules(modules ...interface{}) *App {
 	for _, mod := range modules {
 		switch v := mod.(type) {
@@ -59,7 +59,7 @@ func (a *App) Modules(modules ...interface{}) *App {
 	return a
 }
 
-//ConfigFile set config file path and configs models
+// ConfigFile set config file path and configs models
 func (a *App) ConfigFile(filename string, configs ...interface{}) *App {
 	a.cfile = filename
 	for _, config := range configs {
@@ -69,7 +69,7 @@ func (a *App) ConfigFile(filename string, configs ...interface{}) *App {
 	return a
 }
 
-//Run run application
+// Run run application
 func (a *App) Run() {
 	var err error
 	if len(a.cfile) == 0 {
