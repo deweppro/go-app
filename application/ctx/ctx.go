@@ -15,22 +15,22 @@ type (
 	}
 )
 
-//Close context close method
+// Close context close method
 func (v *ctx) Close() {
 	v.cncl()
 }
 
-//Context general context
+// Context general context
 func (v *ctx) Context() context.Context {
 	return v.ctx
 }
 
-//Done context close wait channel
+// Done context close wait channel
 func (v *ctx) Done() <-chan struct{} {
 	return v.ctx.Done()
 }
 
-//New init default context
+// New init default context
 func New() Context {
 	wctx, cncl := context.WithCancel(context.Background())
 

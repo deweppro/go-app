@@ -39,7 +39,7 @@ type (
 	}
 )
 
-//New tree constructor
+// New tree constructor
 func New() *Tree {
 	return &Tree{
 		sequence: nil,

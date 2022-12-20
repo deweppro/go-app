@@ -13,14 +13,14 @@ import (
 	"github.com/deweppro/go-errors"
 )
 
-//Dic dependency injection container
+// Dic dependency injection container
 type Dic struct {
 	kahn *kahn.Graph
 	srv  *service.Tree
 	list *diData
 }
 
-//New dic constructor
+// New dic constructor
 func New() *Dic {
 	return &Dic{
 		kahn: kahn.New(),
@@ -106,7 +106,7 @@ func (v *Dic) Build() error {
 	return v.exec()
 }
 
-//Inject - obtained dependence
+// Inject - obtained dependence
 func (v *Dic) Inject(item interface{}) error {
 	_, err := v.callArgs(item)
 	return err
@@ -258,6 +258,9 @@ func (v *Dic) exec() error {
 				}
 			}
 			delete(names, addr)
+			if arg.Type().String() == "error" {
+				continue
+			}
 			if err = v.list.Add(arg.Type(), arg.Interface(), typeExist); err != nil {
 				return errors.WrapMessage(err, "initialize error <%s>", addr)
 			}
@@ -307,7 +310,7 @@ func (v *diData) Add(place, value interface{}, t int) error {
 		if addr != "error" {
 			return fmt.Errorf("dependency <%s> is not supported", addr)
 		}
-		return nil
+		//return nil
 	}
 
 	if vv, ok := v.data[addr]; ok {

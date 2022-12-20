@@ -162,5 +162,20 @@ func TestUnit_Dependencies3(t *testing.T) {
 	err := dep.Build()
 	require.Error(t, err)
 	fmt.Println(err.Error())
-	require.Contains(t, err.Error(), "initialize error <github.com/deweppro/go-app/application/dic_test.demo4>: fail init constructor demo4")
+	require.Contains(t, err.Error(), "fail init constructor demo4")
+}
+
+type demo5 struct{}
+
+func newDemo5() error { return fmt.Errorf("fail init constructor newDemo5") }
+
+func TestUnit_Dependencies4(t *testing.T) {
+	dep := dic.New()
+	require.NoError(t, dep.Register([]interface{}{
+		newDemo5,
+	}...))
+	err := dep.Build()
+	require.Error(t, err)
+	fmt.Println(err.Error())
+	require.Contains(t, err.Error(), "fail init constructor newDemo5")
 }

@@ -11,7 +11,7 @@ type (
 	}
 )
 
-//NewArgument constructor
+// NewArgument constructor
 func NewArgument() *Argument {
 	return &Argument{}
 }
@@ -34,7 +34,7 @@ type (
 	}
 )
 
-//NewArgs constructor
+// NewArgs constructor
 func NewArgs() *Args {
 	return &Args{
 		list: make([]Arg, 0),

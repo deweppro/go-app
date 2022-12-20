@@ -6,7 +6,7 @@ import (
 	"syscall"
 )
 
-//OnSyscallStop calling a function if you send a system event stop
+// OnSyscallStop calling a function if you send a system event stop
 func OnSyscallStop(callFunc func()) {
 	quit := make(chan os.Signal, 4)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
@@ -15,7 +15,7 @@ func OnSyscallStop(callFunc func()) {
 	callFunc()
 }
 
-//OnSyscallUp calling a function if you send a system event SIGHUP
+// OnSyscallUp calling a function if you send a system event SIGHUP
 func OnSyscallUp(callFunc func()) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGHUP)
