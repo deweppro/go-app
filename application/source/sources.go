@@ -1,7 +1,7 @@
 package source
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	e "github.com/deweppro/go-app/application/error"
@@ -14,7 +14,7 @@ type Sources string
 
 // Decode unmarshal file to model
 func (s Sources) Decode(configs ...interface{}) error {
-	data, err := ioutil.ReadFile(string(s))
+	data, err := os.ReadFile(string(s))
 	if err != nil {
 		return err
 	}
