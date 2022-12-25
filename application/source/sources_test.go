@@ -1,7 +1,6 @@
 package source_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -21,7 +20,7 @@ level: 5
 `)
 	)
 
-	f, err := ioutil.TempFile(os.TempDir(), "temp-*-config.yaml")
+	f, err := os.CreateTemp(os.TempDir(), "temp-*-config.yaml")
 	require.NoError(t, err)
 	_, err = f.Write(data)
 	require.NoError(t, err)

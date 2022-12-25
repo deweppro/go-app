@@ -6,10 +6,10 @@ import (
 	"github.com/deweppro/go-app/application/ctx"
 	"github.com/deweppro/go-app/application/dic"
 	"github.com/deweppro/go-app/application/source"
-	"github.com/deweppro/go-app/application/sys"
 	"github.com/deweppro/go-app/console"
 	"github.com/deweppro/go-app/internal"
 	"github.com/deweppro/go-logger"
+	"github.com/deweppro/go-utils/syscall"
 )
 
 type (
@@ -143,7 +143,7 @@ func (a *App) launch() {
 				a.ctx.Close()
 				return
 			}
-			go sys.OnSyscallStop(a.ctx.Close)
+			go syscall.OnStop(a.ctx.Close)
 			<-a.ctx.Done()
 		},
 		[]step{
